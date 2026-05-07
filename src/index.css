@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #f8fafc;
+  font-family: 'Inter', sans-serif;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Reset outer layout for print to allow full page usage */
+  .flex.h-screen {
+    display: block !important;
+    height: auto !important;
+  }
+
+  /* Remove any forced screen heights */
+  .h-screen {
+    height: auto !important;
+  }
+
+  /* Ensure background colors are preserved */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

@@ -109,9 +109,40 @@ const DigitalMaturity = () => {
   };
 
   // Training Form Handlers
-  const handleNumEntriesChange = (num) => {
+  // const handleNumEntriesChange = (num) => {
+  //   const safeNum = Math.min(Math.max(1, num), 10);
+  //   const updatedEntries = [...trainingForm.entries];
+  //   if (safeNum > updatedEntries.length) {
+  //     for (let i = updatedEntries.length; i < safeNum; i++) {
+  //       updatedEntries.push({
+  //         personName: "",
+  //         contactNo: "",
+  //         emailId: "",
+  //         photograph_link: "",
+  //       });
+  //     }
+  //   } else {
+  //     updatedEntries.splice(safeNum);
+  //   }
+  //   setTrainingForm({
+  //     ...trainingForm,
+  //     numEntries: safeNum,
+  //     entries: updatedEntries,
+  //   });
+  // };
+
+  const handleNumEntriesChange = (value) => {
+    if (value === "") {
+      setTrainingForm({ ...trainingForm, numEntries: "" });
+      return;
+    }
+  
+    const num = parseInt(value, 10);
+    if (isNaN(num)) return;
+  
     const safeNum = Math.min(Math.max(1, num), 10);
     const updatedEntries = [...trainingForm.entries];
+  
     if (safeNum > updatedEntries.length) {
       for (let i = updatedEntries.length; i < safeNum; i++) {
         updatedEntries.push({
@@ -124,6 +155,7 @@ const DigitalMaturity = () => {
     } else {
       updatedEntries.splice(safeNum);
     }
+  
     setTrainingForm({
       ...trainingForm,
       numEntries: safeNum,
@@ -922,7 +954,7 @@ const DigitalMaturity = () => {
               <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-tighter">
                 Entries (1-10)
               </label>
-              <input
+              {/* <input
                 type="number"
                 min="1"
                 max="10"
@@ -931,6 +963,20 @@ const DigitalMaturity = () => {
                 onChange={(e) =>
                   handleNumEntriesChange(parseInt(e.target.value) || 1)
                 }
+              /> */}
+              <input
+                type="number"
+                min="1"
+                max="10"
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                value={trainingForm.numEntries}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => handleNumEntriesChange(e.target.value)}
+                onBlur={() => {
+                  if (trainingForm.numEntries === "" || trainingForm.numEntries < 1) {
+                    handleNumEntriesChange("1");
+                  }
+                }}
               />
             </div>
             <div>

@@ -139,7 +139,8 @@ const Engagement = () => {
   const handleAddEvent = async () => {
     try {
       await api.post("/engagement/events/", eventForm);
-      fetchData();
+      setEventPage(1);
+      await fetchData();
       setIsEventModalOpen(false);
       setEventForm({
         category: "",
@@ -157,7 +158,8 @@ const Engagement = () => {
   const handleAddCollaboration = async () => {
     try {
       await api.post("/engagement/collaborations/", collaborationForm);
-      fetchData();
+      setCollabPage(1);
+      await fetchData();
       setIsCollaborationModalOpen(false);
       setCollaborationForm({
         partner_name: "",
@@ -175,7 +177,8 @@ const Engagement = () => {
   const handleAddSocialMedia = async () => {
     try {
       await api.post("/engagement/social-media/", socialMediaForm);
-      fetchData();
+      setSocialPage(1);
+      await fetchData();
       setIsSocialMediaModalOpen(false);
       setSocialMediaForm({
         platform: "",

@@ -102,25 +102,55 @@ const VisitorData = () => {
     }
   };
 
-  const handleNumEntriesChange = (num) => {
-    const safeNum = Math.min(Math.max(1, num), 10); // Limit to 10 for manual entry
-    const currentEntries = [...formData.entries];
-    let newEntries = [];
+  // const handleNumEntriesChange = (num) => {
+  //   const safeNum = Math.min(Math.max(1, num), 10); // Limit to 10 for manual entry
+  //   const currentEntries = [...formData.entries];
+  //   let newEntries = [];
     
-    if (safeNum > currentEntries.length) {
-      newEntries = [...currentEntries, ...Array.from({ length: safeNum - currentEntries.length }, () => ({
+  //   if (safeNum > currentEntries.length) {
+  //     newEntries = [...currentEntries, ...Array.from({ length: safeNum - currentEntries.length }, () => ({
+  //       personName: "",
+  //       contactNo: "",
+  //       emailId: "",
+  //       photograph_link: "",
+  //     }))];
+  //   } else {
+  //     newEntries = currentEntries.slice(0, safeNum);
+  //   }
+    
+  //   setFormData({ ...formData, numEntries: safeNum, entries: newEntries });
+  // };
+  const handleNumEntriesChange = (value) => {
+  // Allow clearing the field while typing
+  if (value === "") {
+    setFormData({ ...formData, numEntries: "" });
+    return;
+  }
+
+  const num = parseInt(value, 10);
+  if (isNaN(num)) return;
+
+  const safeNum = Math.min(Math.max(1, num), 10);
+  const currentEntries = [...formData.entries];
+  let newEntries = [];
+
+  if (safeNum > currentEntries.length) {
+    newEntries = [
+      ...currentEntries,
+      ...Array.from({ length: safeNum - currentEntries.length }, () => ({
         personName: "",
         contactNo: "",
         emailId: "",
         photograph_link: "",
-      }))];
-    } else {
-      newEntries = currentEntries.slice(0, safeNum);
-    }
-    
-    setFormData({ ...formData, numEntries: safeNum, entries: newEntries });
-  };
+      })),
+    ];
+  } else {
+    newEntries = currentEntries.slice(0, safeNum);
+  }
 
+  setFormData({ ...formData, numEntries: safeNum, entries: newEntries });
+};
+  
   // const handleEntryChange = (index, field, value) => {
   //   const updatedEntries = [...formData.entries];
   //   updatedEntries[index] = { ...updatedEntries[index], [field]: value };
@@ -626,7 +656,9 @@ const VisitorData = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Entries
               </label>
-              <input
+
+              
+              {/* <input
                 type="number"
                 min="1"
                 max="10"
@@ -635,6 +667,21 @@ const VisitorData = () => {
                 onChange={(e) =>
                   handleNumEntriesChange(parseInt(e.target.value) || 1)
                 }
+              /> */}
+              
+              <input
+                type="number"
+                min="1"
+                max="10"
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none hover:border-blue-400 transition-colors"
+                value={formData.numEntries}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => handleNumEntriesChange(e.target.value)}
+                onBlur={() => {
+                  if (formData.numEntries === "" || formData.numEntries < 1) {
+                    handleNumEntriesChange("1");
+                  }
+                }}
               />
             </div>
             <div>

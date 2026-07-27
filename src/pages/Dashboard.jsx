@@ -972,6 +972,7 @@ import {
   Cell,
   Legend,
   LabelList,
+  Sector,
 } from "recharts";
 import { motion } from "framer-motion";
 import api from "../utils/api";
@@ -1001,6 +1002,183 @@ const container = {
 const item = {
   hidden: { y: 20, opacity: 0 },
   show: { y: 0, opacity: 1 },
+};
+
+const PieChartTooltip = ({ active, payload }) => {
+  if (!active || !payload?.length) return null;
+
+  const item = payload[0];
+  const name = item.name || item.payload?.name;
+  const value = Number(item.value || 0);
+  const color = item.payload?.color || item.color || "#374151";
+  const total = payload.reduce((sum, entry) => sum + Number(entry.value || 0), 0);
+  const percent = total > 0 ? ((value / total) * 100).toFixed(1) : "0.0";
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-md text-sm">
+      <div className="flex items-center gap-2 font-semibold text-gray-800">
+        <span
+          className="inline-block h-3 w-3 rounded-full"
+          style={{ backgroundColor: color }}
+        />
+        <span>{name}</span>
+      </div>
+      <p className="mt-1 text-gray-600">
+        Count: <span className="font-bold text-gray-900">{value}</span>
+      </p>
+      <p className="text-gray-500 text-xs">Share: {percent}%</p>
+    </div>
+  );
+};
+
+const PieValueLegend = ({ data }) => {
+  const items = (data || []).filter((entry) => Number(entry?.value || 0) > 0);
+  if (!items.length) return null;
+
+  const total = items.reduce((sum, entry) => sum + Number(entry.value || 0), 0);
+
+  return (
+    <div className="mt-3 flex flex-col gap-2 px-2">
+      {items.map((entry) => {
+        const value = Number(entry.value || 0);
+        const percent = total > 0 ? ((value / total) * 100).toFixed(1) : "0.0";
+        return (
+          <div
+            key={entry.name}
+            className="flex items-center justify-between gap-3 text-sm"
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <span
+                className="h-3 w-3 shrink-0 rounded-full"
+                style={{ backgroundColor: entry.color }}
+              />
+              <span className="truncate font-semibold text-gray-700">
+                {entry.name}
+              </span>
+            </div>
+            <div className="shrink-0 text-right">
+              <span className="font-bold text-gray-900">{value}</span>
+              <span className="ml-2 text-xs text-gray-500">({percent}%)</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const RADIAN = Math.PI / 180;
+
+const renderSmartLabel = (props) => {
+  const {
+    cx,
+    cy,
+    midAngle,
+    outerRadius,
+    value,
+    name,
+    index,
+    // total slices count passed via data array length
+  } = props;
+
+  if (!value) return null;
+
+  // Push label further out so lines don't crowd the donut
+  const labelRadius = outerRadius + 38;
+  const x = cx + labelRadius * Math.cos(-midAngle * RADIAN);
+  const y = cy + labelRadius * Math.sin(-midAngle * RADIAN);
+
+  // Line start just outside the donut
+  const lineStartRadius = outerRadius + 4;
+  const lx1 = cx + lineStartRadius * Math.cos(-midAngle * RADIAN);
+  const ly1 = cy + lineStartRadius * Math.sin(-midAngle * RADIAN);
+
+  // Mid-elbow point
+  const elbowRadius = outerRadius + 22;
+  const lx2 = cx + elbowRadius * Math.cos(-midAngle * RADIAN);
+  const ly2 = cy + elbowRadius * Math.sin(-midAngle * RADIAN);
+
+  const isRight = x > cx;
+  const textAnchor = isRight ? "start" : "end";
+
+  return (
+    <g key={`label-${index}`}>
+      <polyline
+        points={`${lx1},${ly1} ${lx2},${ly2} ${x},${y}`}
+        stroke="#9CA3AF"
+        strokeWidth={1}
+        fill="none"
+      />
+      <text
+        x={x + (isRight ? 4 : -4)}
+        y={y}
+        textAnchor={textAnchor}
+        dominantBaseline="central"
+        fill="#374151"
+        fontWeight="600"
+        fontSize={12}
+      >
+        {`${name} ${value}`}
+      </text>
+    </g>
+  );
+};
+
+const DashboardPieChart = ({ data }) => {
+  const [activeIndex, setActiveIndex] = useState(null);
+  const chartData = useMemo(
+    () => (data || []).filter((entry) => Number(entry?.value || 0) > 0),
+    [data],
+  );
+
+  const renderActiveShape = (props) => {
+    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } =
+      props;
+    return (
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 8}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+    );
+  };
+
+  return (
+    <div className="flex h-full min-h-[18rem] flex-col">
+      <div className="min-h-[14rem] flex-1 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart margin={{ top: 24, right: 60, bottom: 24, left: 60 }}>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              innerRadius={55}
+              outerRadius={88}
+              paddingAngle={2}
+              dataKey="value"
+              nameKey="name"
+              activeIndex={activeIndex}
+              activeShape={renderActiveShape}
+              onMouseEnter={(_, index) => setActiveIndex(index)}
+              onMouseLeave={() => setActiveIndex(null)}
+              label={renderSmartLabel}
+              labelLine={false}
+            >
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${entry.name}-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip content={<PieChartTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <PieValueLegend data={chartData} />
+    </div>
+  );
 };
 
 const Dashboard = () => {
@@ -1055,8 +1233,11 @@ const Dashboard = () => {
     "Mar",
   ];
 
+  // Overview charts/stats only need visitors + training — do not fire all APIs at once
+  // Keep these loaded for both tabs (performance matrix also uses visitors/training)
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const controller = new AbortController();
+    const fetchOverviewData = async () => {
       try {
         setIsLoadingData(true);
         const params = { page_size: 0 };
@@ -1064,26 +1245,79 @@ const Dashboard = () => {
           params.location = filterLocation;
         }
 
+        // Previously fetched all APIs together (caused duplicate/heavy network load):
+        // const [
+        //   visitorsRes,
+        //   trainingsRes,
+        //   assessmentsRes,
+        //   eventsRes,
+        //   socialMediaRes,
+        //   collabRes,
+        //   maintenanceRes,
+        // ] = await Promise.all([
+        //   api.get("/visitors/", { params }),
+        //   api.get("/training/", { params }),
+        //   api.get("/training/assessment/", { params }),
+        //   api.get("/engagement/events/", { params }),
+        //   api.get("/engagement/social-media/", { params }),
+        //   api.get("/engagement/collaborations/", { params }),
+        //   api.get("/maintenance/", { params }),
+        // ]);
+
+        const [visitorsRes, trainingsRes] = await Promise.all([
+          api.get("/visitors/", { params, signal: controller.signal }),
+          api.get("/training/", { params, signal: controller.signal }),
+        ]);
+
+        setVisitors(visitorsRes.data.results || visitorsRes.data || []);
+        setTrainings(trainingsRes.data.results || trainingsRes.data || []);
+      } catch (error) {
+        if (error?.name === "CanceledError" || error?.code === "ERR_CANCELED")
+          return;
+        console.error("Error fetching overview dashboard data:", error);
+      } finally {
+        if (!controller.signal.aborted) setIsLoadingData(false);
+      }
+    };
+    fetchOverviewData();
+    return () => controller.abort();
+  }, [filterLocation]);
+
+  // Performance Matrix APIs — fetch only when that tab is active (skip visitors/training already loaded above)
+  useEffect(() => {
+    if (activeTab !== "performance" || !isSuperAdmin) return;
+
+    const controller = new AbortController();
+    const fetchPerformanceData = async () => {
+      try {
+        setIsLoadingData(true);
+        const params = { page_size: 0 };
+        if (filterLocation && filterLocation !== "All Locations") {
+          params.location = filterLocation;
+        }
+
+        // Only performance-specific endpoints — visitors/training come from overview fetch
+        // Previously all 7 APIs were loaded together on every Dashboard mount.
         const [
-          visitorsRes,
-          trainingsRes,
           assessmentsRes,
           eventsRes,
           socialMediaRes,
           collabRes,
           maintenanceRes,
         ] = await Promise.all([
-          api.get("/visitors/", { params }),
-          api.get("/training/", { params }),
-          api.get("/training/assessment/", { params }),
-          api.get("/engagement/events/", { params }),
-          api.get("/engagement/social-media/", { params }),
-          api.get("/engagement/collaborations/", { params }),
-          api.get("/maintenance/", { params }),
+          api.get("/training/assessment/", { params, signal: controller.signal }),
+          api.get("/engagement/events/", { params, signal: controller.signal }),
+          api.get("/engagement/social-media/", {
+            params,
+            signal: controller.signal,
+          }),
+          api.get("/engagement/collaborations/", {
+            params,
+            signal: controller.signal,
+          }),
+          api.get("/maintenance/", { params, signal: controller.signal }),
         ]);
 
-        setVisitors(visitorsRes.data.results || visitorsRes.data || []);
-        setTrainings(trainingsRes.data.results || trainingsRes.data || []);
         setAssessments(
           assessmentsRes.data.results || assessmentsRes.data || [],
         );
@@ -1096,13 +1330,16 @@ const Dashboard = () => {
           maintenanceRes.data.results || maintenanceRes.data || [],
         );
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        if (error?.name === "CanceledError" || error?.code === "ERR_CANCELED")
+          return;
+        console.error("Error fetching performance dashboard data:", error);
       } finally {
-        setIsLoadingData(false);
+        if (!controller.signal.aborted) setIsLoadingData(false);
       }
     };
-    fetchDashboardData();
-  }, [filterLocation]);
+    fetchPerformanceData();
+    return () => controller.abort();
+  }, [filterLocation, activeTab, isSuperAdmin]);
 
   // Filtering all datasets by location (Double-check fallback for robustness)
   const filterByLocation = (data) => {
@@ -1142,13 +1379,20 @@ const Dashboard = () => {
     [maintenance, filterLocation],
   );
 
+  // Locations only for superadmin location filter — not tied to chart APIs
   useEffect(() => {
+    if (!isSuperAdmin) return;
+    const controller = new AbortController();
     const fetchLocations = async () => {
       try {
-        const resp = await api.get("/auth/locations/");
+        const resp = await api.get("/auth/locations/", {
+          signal: controller.signal,
+        });
         const locs = resp.data || [];
         setAvailableLocations(["All Locations", ...locs]);
       } catch (error) {
+        if (error?.name === "CanceledError" || error?.code === "ERR_CANCELED")
+          return;
         console.error("Error fetching locations:", error);
         // Fallback to extraction from visitors if endpoint fails
         const locs = new Set(visitors.map((v) => v.location).filter(Boolean));
@@ -1156,7 +1400,8 @@ const Dashboard = () => {
       }
     };
     fetchLocations();
-  }, []);
+    return () => controller.abort();
+  }, [isSuperAdmin]);
 
   const locations = availableLocations;
 
@@ -1568,7 +1813,7 @@ const Dashboard = () => {
 
   const getOrgData = () =>
     processedData.orgDataByYear[orgYear] ||
-    monthsList.map((m) => ({ name: m, count: 0 }));
+    monthsList.map((m) => ({ name: m, count: 0, beneficiariesCount: 0 }));
   const getBeneficiariesData = () =>
     (processedData.benefDataByYear[benefYear] &&
       processedData.benefDataByYear[benefYear][benefMonth]) || [
@@ -1587,6 +1832,21 @@ const Dashboard = () => {
     (processedData.orgPieDataConverted[pieYear2025] &&
       processedData.orgPieDataConverted[pieYear2025][pieMonth2025]) ||
     [];
+
+  const hasBarValues = (data, keys) =>
+    Array.isArray(data) &&
+    data.some((d) => keys.some((k) => Number(d?.[k] || 0) > 0));
+  const hasPieValues = (data) =>
+    Array.isArray(data) && data.some((d) => Number(d?.value || 0) > 0);
+
+  const ChartEmptyState = ({ message = "No data found for the selected filters" }) => (
+    <div className="h-full min-h-[16rem] flex flex-col items-center justify-center text-center px-4">
+      <p className="text-gray-500 font-semibold text-sm">{message}</p>
+      <p className="text-gray-400 text-xs mt-1">
+        Try another year or month, or check back later.
+      </p>
+    </div>
+  );
   const totals = useMemo(() => {
     const totalVisitors = filteredVisitors.length;
     const totalOrgs = new Set(filteredVisitors.map((v) => v.company)).size;
@@ -1602,33 +1862,35 @@ const Dashboard = () => {
     return { totalVisitors, totalOrgs, academic, industrial, govt };
   }, [filteredVisitors]);
 
-  const CustomLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    value,
-    name,
-  }) => {
-    const RADIAN = Math.PI / 180;
-    const radius = outerRadius + 30;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="#374151"
-        textAnchor={x > cx ? "start" : "end"}
-        dominantBaseline="central"
-        className="font-semibold text-sm"
-      >
-        {`${name} ${value}`}
-      </text>
-    );
-  };
+  // const CustomLabel = ({
+  //   cx,
+  //   cy,
+  //   midAngle,
+  //   innerRadius,
+  //   outerRadius,
+  //   value,
+  //   name,
+  // }) => {
+  //   if (!value) return null;
+  //   const RADIAN = Math.PI / 180;
+  //   const radius = outerRadius + 28;
+  //   const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  //   const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  //
+  //   return (
+  //     <text
+  //       x={x}
+  //       y={y}
+  //       fill="#374151"
+  //       textAnchor={x > cx ? "start" : "end"}
+  //       dominantBaseline="central"
+  //       className="font-semibold"
+  //       style={{ fontSize: "12px" }}
+  //     >
+  //       {`${name} ${value}`}
+  //     </text>
+  //   );
+  // };
 
   return (
     <motion.div
@@ -1737,21 +1999,21 @@ const Dashboard = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch">
             {/* Organization Count Graph */}
 
             <motion.div
               variants={item}
-              className="border-2 border-blue-500 rounded-lg p-6 bg-white"
+              className="border-2 border-blue-500 rounded-lg p-4 sm:p-6 bg-white flex flex-col min-w-0 overflow-hidden"
             >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-base font-bold bg-yellow-300 px-3 py-1 inline-block">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                <h3 className="text-sm sm:text-base font-bold bg-yellow-300 px-3 py-1 inline-block max-w-full">
                   Monthly Organization Count Bar Graph – Year
                 </h3>
                 <select
                   value={orgYear}
                   onChange={(e) => setOrgYear(e.target.value)}
-                  className="px-3 py-1 border-2 border-gray-400 rounded text-sm font-semibold"
+                  className="px-3 py-1 border-2 border-gray-400 rounded text-sm font-semibold self-start sm:self-auto"
                 >
                   <option value="2023">2023</option>
                   <option value="2024">2024</option>
@@ -1759,63 +2021,84 @@ const Dashboard = () => {
                   <option value="2026">2026</option>
                 </select>
               </div>
-              <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={getOrgData()}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis
-                      dataKey="name"
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                      style={{ fontSize: "11px" }}
-                    />
-                    <Tooltip />
-                    <Legend verticalAlign="top" height={36} />
-                    <Bar
-                      dataKey="count"
-                      name="Organization"
-                      fill="#3B82F6"
-                      radius={[4, 4, 0, 0]}
-                      barSize={20}
+              <div className="h-[26rem] sm:h-[28rem] w-full min-h-[26rem]">
+                {isLoadingData ? (
+                  <ChartEmptyState message="Loading chart data..." />
+                ) : !hasBarValues(getOrgData(), [
+                    "count",
+                    "beneficiariesCount",
+                  ]) ? (
+                  <ChartEmptyState message="No organization data found for the selected year" />
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={getOrgData()}
+                      margin={{ top: 24, right: 12, left: 0, bottom: 8 }}
+                      barCategoryGap="18%"
+                      barGap={4}
                     >
-                      <LabelList
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      {/* angle removed — keep x-axis labels horizontal */}
+                      {/* angle={-45} textAnchor="end" height={80} */}
+                      <XAxis
+                        dataKey="name"
+                        angle={0}
+                        textAnchor="middle"
+                        interval={0}
+                        height={36}
+                        tick={{ fontSize: 11 }}
+                        style={{ fontSize: "11px" }}
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        width={36}
+                        tick={{ fontSize: 11 }}
+                        style={{ fontSize: "11px" }}
+                      />
+                      <Tooltip />
+                      <Legend verticalAlign="top" height={36} />
+                      <Bar
                         dataKey="count"
-                        position="top"
-                        style={{ fontSize: "10px", fontWeight: "bold" }}
-                      />
-                    </Bar>
-                    <Bar
-                      dataKey="beneficiariesCount"
-                      name="Beneficiaries"
-                      fill="#10B981"
-                      radius={[4, 4, 0, 0]}
-                      barSize={20}
-                    >
-                      <LabelList
+                        name="Organization"
+                        fill="#3B82F6"
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={28}
+                      >
+                        <LabelList
+                          dataKey="count"
+                          position="top"
+                          style={{ fontSize: "10px", fontWeight: "bold" }}
+                        />
+                      </Bar>
+                      <Bar
                         dataKey="beneficiariesCount"
-                        position="top"
-                        style={{ fontSize: "10px", fontWeight: "bold" }}
-                      />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                        name="Beneficiaries"
+                        fill="#10B981"
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={28}
+                      >
+                        <LabelList
+                          dataKey="beneficiariesCount"
+                          position="top"
+                          style={{ fontSize: "10px", fontWeight: "bold" }}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </motion.div>
 
             {/* Beneficiaries Count Graph */}
             <motion.div
               variants={item}
-              className="border-2 border-green-500 rounded-lg p-6 bg-white"
+              className="border-2 border-green-500 rounded-lg p-4 sm:p-6 bg-white flex flex-col min-w-0 overflow-hidden"
             >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-base font-bold bg-green-400 px-3 py-1 inline-block">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                <h3 className="text-sm sm:text-base font-bold bg-green-400 px-3 py-1 inline-block max-w-full">
                   Monthly Beneficiaries Count Bar Graph – Year
                 </h3>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <select
                     value={benefYear}
                     onChange={(e) => {
@@ -1841,44 +2124,69 @@ const Dashboard = () => {
                   </select>
                 </div>
               </div>
-              <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={getBeneficiariesData()}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis
-                      dataKey="name"
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                      style={{ fontSize: "11px" }}
-                    />
-                    <YAxis style={{ fontSize: "11px" }} />
-                    <Tooltip />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
-                      {getBeneficiariesData().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="h-[26rem] sm:h-[28rem] w-full min-h-[26rem]">
+                {isLoadingData ? (
+                  <ChartEmptyState message="Loading chart data..." />
+                ) : !hasBarValues(getBeneficiariesData(), ["value"]) ? (
+                  <ChartEmptyState message="No beneficiaries data found for the selected filters" />
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={getBeneficiariesData()}
+                      margin={{ top: 24, right: 12, left: 0, bottom: 8 }}
+                      barCategoryGap="28%"
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      {/* angle removed — keep x-axis labels horizontal */}
+                      {/* angle={-45} textAnchor="end" height={80} */}
+                      <XAxis
+                        dataKey="name"
+                        angle={0}
+                        textAnchor="middle"
+                        interval={0}
+                        height={36}
+                        tick={{ fontSize: 11 }}
+                        style={{ fontSize: "11px" }}
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        width={36}
+                        tick={{ fontSize: 11 }}
+                        style={{ fontSize: "11px" }}
+                      />
+                      <Tooltip />
+                      <Bar
+                        dataKey="value"
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={56}
+                      >
+                        {getBeneficiariesData().map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                        <LabelList
+                          dataKey="value"
+                          position="top"
+                          style={{ fontSize: "10px", fontWeight: "bold" }}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </motion.div>
           </div>
 
           {/* Organization Count Pie Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch">
             <motion.div
               variants={item}
-              className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm"
+              className="border border-gray-300 rounded-lg p-4 sm:p-6 bg-white shadow-sm flex flex-col min-w-0"
             >
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="text-center bg-yellow-300 px-3 py-1 font-bold text-lg rounded">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                <h4 className="text-center bg-yellow-300 px-3 py-1 font-bold text-base sm:text-lg rounded inline-block">
                   Organization count
                 </h4>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <select
                     value={pieYear2025}
                     onChange={(e) => setPieYear2025(e.target.value)}
@@ -1901,37 +2209,25 @@ const Dashboard = () => {
                   </select>
                 </div>
               </div>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={getPieData2025()}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={0}
-                      dataKey="value"
-                      label={CustomLabel}
-                      labelLine={true}
-                    >
-                      {getPieData2025().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="h-72 sm:h-80 w-full min-h-[18rem]">
+                {isLoadingData ? (
+                  <ChartEmptyState message="Loading chart data..." />
+                ) : !hasPieValues(getPieData2025()) ? (
+                  <ChartEmptyState message="No organization count data found for the selected filters" />
+                ) : (
+                  <DashboardPieChart data={getPieData2025()} />
+                )}
               </div>
             </motion.div>
             <motion.div
               variants={item}
-              className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm"
+              className="border border-gray-300 rounded-lg p-4 sm:p-6 bg-white shadow-sm flex flex-col min-w-0"
             >
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="text-center bg-green-400 px-3 py-1 font-bold text-lg rounded">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                <h4 className="text-center bg-green-400 px-3 py-1 font-bold text-base sm:text-lg rounded inline-block">
                   Beneficiaries Count
                 </h4>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <select
                     value={pieYear2024}
                     onChange={(e) => setPieYear2024(e.target.value)}
@@ -1954,26 +2250,14 @@ const Dashboard = () => {
                   </select>
                 </div>
               </div>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={getPieData2024()}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={0}
-                      dataKey="value"
-                      label={CustomLabel}
-                      labelLine={true}
-                    >
-                      {getPieData2024().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="h-72 sm:h-80 w-full min-h-[18rem]">
+                {isLoadingData ? (
+                  <ChartEmptyState message="Loading chart data..." />
+                ) : !hasPieValues(getPieData2024()) ? (
+                  <ChartEmptyState message="No beneficiaries count data found for the selected filters" />
+                ) : (
+                  <DashboardPieChart data={getPieData2024()} />
+                )}
               </div>
             </motion.div>
           </div>
@@ -1983,6 +2267,40 @@ const Dashboard = () => {
           variants={item}
           className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
         >
+
+<div className="p-8 bg-gray-50 grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+              <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">
+                Industry Visitors
+              </p>
+              <p className="text-4xl font-black text-blue-600">
+                {totals.industrial}
+              </p>
+            </div>
+            <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+              <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">
+                Academia Visitors
+              </p>
+              <p className="text-4xl font-black text-green-600">
+                {totals.academic}
+              </p>
+            </div>
+            <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-200">
+              <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">
+                Government Visitors
+              </p>
+              <p className="text-4xl font-black text-amber-600">
+                {totals.govt}
+              </p>
+            </div>
+            <div className="text-center p-6 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg border border-blue-400">
+              <p className="text-blue-100 text-sm font-bold uppercase tracking-wider mb-2">
+                Monthly Score
+              </p>
+              <p className="text-4xl font-black text-white">{totalScore}%</p>
+            </div>
+          </div>
+
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -2083,38 +2401,6 @@ const Dashboard = () => {
             </table>
           </div>
 
-          <div className="p-8 bg-gray-50 grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-              <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">
-                Industry Visitors
-              </p>
-              <p className="text-4xl font-black text-blue-600">
-                {totals.industrial}
-              </p>
-            </div>
-            <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-              <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">
-                Academia Visitors
-              </p>
-              <p className="text-4xl font-black text-green-600">
-                {totals.academic}
-              </p>
-            </div>
-            <div className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-              <p className="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">
-                Government Visitors
-              </p>
-              <p className="text-4xl font-black text-amber-600">
-                {totals.govt}
-              </p>
-            </div>
-            <div className="text-center p-6 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg border border-blue-400">
-              <p className="text-blue-100 text-sm font-bold uppercase tracking-wider mb-2">
-                Monthly Score
-              </p>
-              <p className="text-4xl font-black text-white">{totalScore}%</p>
-            </div>
-          </div>
         </motion.div>
       )}
     </motion.div>

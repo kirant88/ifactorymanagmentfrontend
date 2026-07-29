@@ -1095,9 +1095,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { Printer, Save, Plus, Upload, X, Trash2 } from "lucide-react";
 import ifactorylogo from "../assets/images/iFactoryLogo.png";
 import c4i4Logo from "../assets/images/c4i4Logo.png";
-// Import your PDF images
-import pdfImage1 from "../assets/pdfimages/pdfimage1.png"; // Adjust path as needed
-import pdfImage2 from "../assets/pdfimages/pdfimage2.png"; // Adjust path as needed
 import api from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -1706,29 +1703,7 @@ const IFactoryMonthlyReport = () => {
 
       {/* Report Container */}
       <div className="max-w-7xl mx-auto p-8 bg-white print:p-4">
-        {/* ==================== PAGE 1: PDF IMAGE 1 ==================== */}
-        {/* <div className="mb-8 page-break">
-          <div className="w-full">
-            <img
-              src={pdfImage1}
-              alt="iFactory Report Page 1"
-              className="w-full h-auto"
-              style={{ maxWidth: "100%", height: "auto" }}
-            />
-          </div>
-        </div> */}
-
-        {/* ==================== PAGE 2: PDF IMAGE 2 ==================== */}
-        {/* <div className="mb-8 page-break">
-          <div className="w-full">
-            <img
-              src={pdfImage2}
-              alt="iFactory Report Page 2"
-              className="w-full h-auto"
-              style={{ maxWidth: "100%", height: "auto" }}
-            />
-          </div>
-        </div> */}
+      
 
         {/* ==================== PAGE 3: HEADER WITH LOGOS ==================== */}
         <div className="page-break">

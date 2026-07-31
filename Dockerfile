@@ -8,7 +8,7 @@ RUN rm -rf /etc/nginx/conf.d/default.conf
 WORKDIR /usr/share/nginx/html/app
 
 # Copy the contents of the dist directory into the working directory
-COPY build/ .
+COPY dist/ .
 
 # Copy the custom Nginx configuration file
 COPY .github/workflows/nginx.conf /etc/nginx/conf.d/

@@ -20,7 +20,7 @@ const PageFooter = ({ pageNumber }) => {
       className="report-page-footer"
       style={{
         background: PAGE_BLUE,
-        padding: "16px 36px 12px",
+        padding: "12px 36px 10px",
         marginTop: "auto",
         flexShrink: 0,
       }}
@@ -30,7 +30,7 @@ const PageFooter = ({ pageNumber }) => {
           height: 2,
           background: "#FFFFFF",
           width: "100%",
-          marginBottom: 10,
+          marginBottom: 8,
         }}
       />
       <div

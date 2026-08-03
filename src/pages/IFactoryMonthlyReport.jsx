@@ -1096,6 +1096,7 @@ import { Printer, Save, Plus, Upload, X, Trash2 } from "lucide-react";
 import ifactorylogo from "../assets/images/iFactoryLogo.png";
 import c4i4Logo from "../assets/images/c4i4Logo.png";
 import api from "../utils/api";
+import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
 
 const IFactoryMonthlyReport = () => {
@@ -1563,7 +1564,7 @@ const IFactoryMonthlyReport = () => {
       savedAt: new Date().toISOString(),
     };
     localStorage.setItem("iFactoryMonthlyReport", JSON.stringify(data));
-    alert("Report saved successfully!");
+    notify.success("Report saved successfully!");
   };
 
   const handlePrint = () => {

@@ -3,6 +3,7 @@ import { Edit2, Trash2 } from "lucide-react";
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import api from "../utils/api";
+import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
 
 const VisitorData = () => {
@@ -98,7 +99,7 @@ const VisitorData = () => {
       link.click();
       link.remove();
     } catch (error) {
-      alert("Failed to download template.");
+      notify.error("Failed to download template.");
     }
   };
 
@@ -202,7 +203,7 @@ const VisitorData = () => {
       setSelectedIds([]); // Clear selection after bulk update
     } catch (error) {
       console.error("Error saving visitors:", error);
-      alert("Error saving visitors. Please check your data.");
+      notify.error("Error saving visitors. Please check your data.");
     }
   };
 
@@ -249,10 +250,10 @@ const VisitorData = () => {
       await Promise.all(promises);
       await fetchVisitors();
       setIsInlineEditing(false);
-      alert("All changes saved successfully!");
+      notify.success("All changes saved successfully!");
     } catch (error) {
       console.error("Error saving inline edits:", error);
-      alert("Failed to save changes. Please check your data.");
+      notify.error("Failed to save changes. Please check your data.");
     } finally {
       setIsLoading(false);
     }
@@ -264,7 +265,7 @@ const VisitorData = () => {
       await api.delete(`/visitors/${id}/`);
       fetchVisitors();
     } catch (error) {
-      alert("Failed to delete visitor.");
+      notify.error("Failed to delete visitor.");
     }
   };
 
@@ -281,7 +282,7 @@ const VisitorData = () => {
       setIsBulkUploadOpen(false);
       setUploadFile(null);
     } catch (error) {
-      alert("Bulk upload failed. Ensure the file format is correct.");
+      notify.error("Bulk upload failed. Ensure the file format is correct.");
     }
   };
 

@@ -3,6 +3,7 @@ import { Plus, Calendar as CalendarIcon, FileText, ChevronLeft, ChevronRight, X,
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import api from "../utils/api";
+import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
 
 const DailyWeeklyReport = () => {
@@ -106,7 +107,7 @@ const DailyWeeklyReport = () => {
       setDailyFormData({ date: new Date().toISOString().split("T")[0], po_numbers: [""], reason: "" });
       fetchDailyReports();
     } catch (error) {
-      alert("Error saving daily report");
+      notify.error("Error saving daily report");
     }
   };
 
@@ -117,7 +118,7 @@ const DailyWeeklyReport = () => {
       setWeeklyFormData({ date: new Date().toISOString().split("T")[0], photo_link: "" });
       fetchWeeklyReports();
     } catch (error) {
-      alert("Error saving weekly report");
+      notify.error("Error saving weekly report");
     }
   };
 

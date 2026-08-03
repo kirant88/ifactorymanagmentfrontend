@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Plus, Trash2, Save } from "lucide-react";
 import api from "../../utils/api";
+import { notify } from "../../utils/toast";
 import { BRAND, COLLAGE_IMAGE_COUNTS } from "../../constants/reportConstants";
 
 const fileToBase64 = (file) =>
@@ -19,13 +20,15 @@ const CollageManager = ({
   groups,
   onRefresh,
   title = "Manage Collage",
+  imageCounts = COLLAGE_IMAGE_COUNTS,
 }) => {
   const fileInputRef = useRef(null);
   const [draftTitle, setDraftTitle] = useState("");
-  const [imageCount, setImageCount] = useState(2);
+  const [imageCount, setImageCount] = useState(imageCounts[0] || 2);
   const [draftImages, setDraftImages] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const allowedCounts = imageCounts?.length ? imageCounts : COLLAGE_IMAGE_COUNTS;
 
   const resetDraft = () => {
     setDraftTitle("");
@@ -43,11 +46,11 @@ const CollageManager = ({
 
     for (const file of files) {
       if (!file.type.startsWith("image/")) {
-        alert("Please select image files only.");
+        notify.info("Please select image files only.");
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        alert("Each image must be under 5MB.");
+        notify.info("Each image must be under 5MB.");
         return;
       }
     }
@@ -64,17 +67,20 @@ const CollageManager = ({
   const startEdit = (group) => {
     setEditingId(group.id);
     setDraftTitle(group.title);
-    setImageCount(group.images.length);
-    setDraftImages(group.images);
+    const count = allowedCounts.includes(group.images.length)
+      ? group.images.length
+      : allowedCounts[0];
+    setImageCount(count);
+    setDraftImages(group.images.slice(0, count));
   };
 
   const handleSave = async () => {
     if (!draftTitle.trim()) {
-      alert("Please enter a title/caption for this collage.");
+      notify.info("Please enter a title/caption for this collage.");
       return;
     }
-    if (!COLLAGE_IMAGE_COUNTS.includes(draftImages.length)) {
-      alert(`Please upload exactly ${imageCount} images (2, 4, 6, or 8).`);
+    if (!allowedCounts.includes(draftImages.length)) {
+      notify.info(`Please upload exactly ${imageCount} image${imageCount === 1 ? "" : "s"}.`);
       return;
     }
 
@@ -97,10 +103,10 @@ const CollageManager = ({
       }
       resetDraft();
       onRefresh();
-      alert("Collage saved successfully!");
+      notify.success("Collage saved successfully!");
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.images?.[0] || "Failed to save collage.");
+      notify.error(err.response?.data?.images?.[0] || "Failed to save collage.");
     } finally {
       setIsSaving(false);
     }
@@ -113,7 +119,7 @@ const CollageManager = ({
       onRefresh();
     } catch (err) {
       console.error(err);
-      alert("Failed to delete collage.");
+      notify.error("Failed to delete collage.");
     }
   };
 
@@ -160,7 +166,7 @@ const CollageManager = ({
             fontWeight: 600,
           }}
         >
-          {COLLAGE_IMAGE_COUNTS.map((n) => (
+          {allowedCounts.map((n) => (
             <option key={n} value={n}>
               {n} images
             </option>
@@ -320,8 +326,9 @@ const CollageManager = ({
       )}
 
       <p style={{ margin: "12px 0 0", fontSize: 12, color: "#78909C" }}>
-        <Plus size={12} style={{ verticalAlign: "middle" }} /> Upload 2, 4, 6, or 8 images per
-        collage row. Each collage gets a title displayed below the images in the PDF.
+        <Plus size={12} style={{ verticalAlign: "middle" }} /> Upload{" "}
+        {allowedCounts.join(", ")} image{allowedCounts.length === 1 && allowedCounts[0] === 1 ? "" : "s"}{" "}
+        per collage. Title appears below the images in the report.
       </p>
     </div>
   );

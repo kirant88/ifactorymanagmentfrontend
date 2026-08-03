@@ -39,20 +39,14 @@ const CoverPage = ({ monthYear }) => {
         }}
       />
 
-      {/*
-        Mask baked-in stacked date (JUNE + 2026) from cover artwork.
-        Measured from cover-reference.png (584×815):
-          JUNE  → y 36.3%–38.2%
-          2026  → y 39.4%–41.2%
-          x     → ~6.7%–17%
-      */}
+   
       <div
         style={{
           position: "absolute",
-          left: "5.5%",
+          left: "4.5%",
           top: "35.8%",
-          width: "22%",
-          height: "6.2%",
+          width: "auto",
+          height: "auto",
           backgroundColor: COVER_BLUE,
           zIndex: 2,
           display: "flex",
@@ -62,14 +56,14 @@ const CoverPage = ({ monthYear }) => {
           lineHeight: 1.15,
           paddingLeft: "1.2%",
           boxSizing: "border-box",
+          fontWeight: 800,
         }}
       >
         <span
           style={{
             color: "#FFFFFF",
-            fontSize: "clamp(12px, 2.05vw, 18px)",
-            fontWeight: 700,
-            letterSpacing: "0.12em",
+            fontSize: "clamp(28px, 2.05vw, 28px)",
+            fontWeight: 800,
             fontFamily: "'Segoe UI', Montserrat, Arial, Helvetica, sans-serif",
             whiteSpace: "nowrap",
             display: "block",
@@ -80,9 +74,8 @@ const CoverPage = ({ monthYear }) => {
         <span
           style={{
             color: "#FFFFFF",
-            fontSize: "clamp(12px, 2.05vw, 18px)",
-            fontWeight: 700,
-            letterSpacing: "0.12em",
+            fontSize: "clamp(28px, 2.05vw, 28px)",
+            fontWeight: 800,
             fontFamily: "'Segoe UI', Montserrat, Arial, Helvetica, sans-serif",
             whiteSpace: "nowrap",
             display: "block",

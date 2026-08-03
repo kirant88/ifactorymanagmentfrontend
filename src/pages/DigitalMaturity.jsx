@@ -3,6 +3,7 @@ import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import { Plus, Upload as UploadIcon } from "lucide-react";
 import api from "../utils/api";
+import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
 
 const DigitalMaturity = () => {
@@ -190,7 +191,7 @@ const DigitalMaturity = () => {
       setIsTrainingModalOpen(false);
       resetTrainingForm();
     } catch (error) {
-      alert("Error adding training records.");
+      notify.error("Error adding training records.");
     }
   };
 
@@ -220,7 +221,7 @@ const DigitalMaturity = () => {
       setIsTrainingBulkOpen(false);
       setUploadFile(null);
     } catch (error) {
-      alert("Bulk upload failed.");
+      notify.error("Bulk upload failed.");
     }
   };
 
@@ -237,7 +238,7 @@ const DigitalMaturity = () => {
       link.click();
       link.remove();
     } catch (error) {
-      alert("Failed to download template.");
+      notify.error("Failed to download template.");
     }
   };
 
@@ -263,7 +264,7 @@ const DigitalMaturity = () => {
         photograph_link: "",
       });
     } catch (error) {
-      alert("Error adding assessment.");
+      notify.error("Error adding assessment.");
     }
   };
 
@@ -279,7 +280,7 @@ const DigitalMaturity = () => {
       setIsMaturityBulkOpen(false);
       setUploadFile(null);
     } catch (error) {
-      alert("Bulk upload failed.");
+      notify.error("Bulk upload failed.");
     }
   };
 
@@ -297,7 +298,7 @@ const DigitalMaturity = () => {
       link.click();
       link.remove();
     } catch (error) {
-      alert("Failed to download template.");
+      notify.error("Failed to download template.");
     }
   };
 
@@ -338,10 +339,10 @@ const DigitalMaturity = () => {
       await Promise.all(promises);
       await fetchData();
       setIsTrainingEditing(false);
-      alert("All training changes saved successfully!");
+      notify.success("All training changes saved successfully!");
     } catch (error) {
       console.error("Error saving training edits:", error);
-      alert("Failed to save changes. Please check your data.");
+      notify.error("Failed to save changes. Please check your data.");
     } finally {
       setIsLoading(false);
     }
@@ -387,10 +388,10 @@ const DigitalMaturity = () => {
       await Promise.all(promises);
       await fetchData();
       setIsAssessmentEditing(false);
-      alert("All assessment changes saved successfully!");
+      notify.success("All assessment changes saved successfully!");
     } catch (error) {
       console.error("Error saving assessment edits:", error);
-      alert("Failed to save changes. Please check your data.");
+      notify.error("Failed to save changes. Please check your data.");
     } finally {
       setIsLoading(false);
     }

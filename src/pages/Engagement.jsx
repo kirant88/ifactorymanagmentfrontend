@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import api from "../utils/api";
+import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
 
 const Engagement = () => {
@@ -151,7 +152,7 @@ const Engagement = () => {
         photograph_link: "",
       });
     } catch (error) {
-      alert("Error adding event.");
+      notify.error("Error adding event.");
     }
   };
 
@@ -170,7 +171,7 @@ const Engagement = () => {
         photograph_link: "",
       });
     } catch (error) {
-      alert("Error adding collaboration.");
+      notify.error("Error adding collaboration.");
     }
   };
 
@@ -189,7 +190,7 @@ const Engagement = () => {
         photograph_link: "",
       });
     } catch (error) {
-      alert("Error adding social media post.");
+      notify.error("Error adding social media post.");
     }
   };
 
@@ -228,10 +229,10 @@ const Engagement = () => {
       await Promise.all(promises);
       await fetchData();
       setIsEventEditing(false);
-      alert("All event changes saved successfully!");
+      notify.success("All event changes saved successfully!");
     } catch (error) {
       console.error("Error saving event edits:", error);
-      alert("Failed to save changes. Please check your data.");
+      notify.error("Failed to save changes. Please check your data.");
     } finally {
       setIsLoading(false);
     }
@@ -277,10 +278,10 @@ const Engagement = () => {
       await Promise.all(promises);
       await fetchData();
       setIsCollaborationEditing(false);
-      alert("All collaboration changes saved successfully!");
+      notify.success("All collaboration changes saved successfully!");
     } catch (error) {
       console.error("Error saving collaboration edits:", error);
-      alert("Failed to save changes. Please check your data.");
+      notify.error("Failed to save changes. Please check your data.");
     } finally {
       setIsLoading(false);
     }
@@ -326,10 +327,10 @@ const Engagement = () => {
       await Promise.all(promises);
       await fetchData();
       setIsSocialMediaEditing(false);
-      alert("All social media changes saved successfully!");
+      notify.success("All social media changes saved successfully!");
     } catch (error) {
       console.error("Error saving social media edits:", error);
-      alert("Failed to save changes. Please check your data.");
+      notify.error("Failed to save changes. Please check your data.");
     } finally {
       setIsLoading(false);
     }

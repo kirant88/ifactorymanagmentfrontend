@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import api from "../utils/api";
+import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
 import { Users, UserCheck, ShieldAlert, Plus, Trash2, Key, Edit, Info } from "lucide-react";
 
@@ -122,7 +123,7 @@ const Admin = () => {
     try {
       if (modalMode === "create") {
         if (formData.password !== formData.password_confirm) {
-          alert("Passwords do not match!");
+          notify.error("Passwords do not match!");
           return;
         }
         await api.post("/auth/register/", formData);
@@ -133,31 +134,32 @@ const Admin = () => {
       setIsModalOpen(false);
       fetchUsers();
       fetchStats();
+      notify.success(modalMode === "create" ? "User created successfully!" : "User updated successfully!");
     } catch (error) {
       const errorMsg = error.response?.data ? Object.values(error.response.data)[0] : "Operation failed";
-      alert(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
+      notify.error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
     }
   };
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
     if (passwordData.password !== passwordData.password_confirm) {
-      alert("Passwords do not match!");
+      notify.error("Passwords do not match!");
       return;
     }
 
     try {
       await api.post(`/auth/users/${selectedUser.id}/reset-password/`, passwordData);
       setIsPasswordModalOpen(false);
-      alert("Password reset successfully!");
+      notify.success("Password reset successfully!");
     } catch (error) {
-      alert("Failed to reset password.");
+      notify.error("Failed to reset password.");
     }
   };
 
   const handleDeleteUser = async (userId) => {
     if (userId === currentUser.user_id) {
-      alert("You cannot delete yourself!");
+      notify.info("You cannot delete yourself!");
       return;
     }
     if (window.confirm("Are you sure you want to delete this user?")) {
@@ -165,8 +167,9 @@ const Admin = () => {
         await api.delete(`/auth/users/${userId}/`);
         fetchUsers();
         fetchStats();
+        notify.success("User deleted successfully!");
       } catch (error) {
-        alert("Failed to delete user.");
+        notify.error("Failed to delete user.");
       }
     }
   };

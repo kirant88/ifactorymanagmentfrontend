@@ -273,8 +273,8 @@ const DailyWeeklyReport = () => {
             </div>
             <button
               onClick={() => setIsDailyModalOpen(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all font-bold flex items-center gap-2"
-            >
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-lg  transition-all font-bold flex items-center gap-2"
+                >
               <Plus size={18} />
               Add Pump Data
             </button>
@@ -436,7 +436,7 @@ const DailyWeeklyReport = () => {
             </button>
             <button
               onClick={handleDailySubmit}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-500/20 font-bold transition-all"
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700  font-bold transition-all"
             >
               Submit Report
             </button>

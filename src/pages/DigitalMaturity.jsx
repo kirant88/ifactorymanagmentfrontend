@@ -494,7 +494,7 @@ const DigitalMaturity = () => {
           </div>
         </div>
         <DataTable
-          title={`iFactory Training ${isTrainingEditing ? "(Edit Mode Active)" : ""}`}
+          // title={`iFactory Training ${isTrainingEditing ? "(Edit Mode Active)" : ""}`}
           isLoading={isLoading}
           columns={[
             { header: "Sr No.", render: (_, i) => i + 1 },
@@ -647,7 +647,7 @@ const DigitalMaturity = () => {
             },
           ]}
           data={trainings}
-          onAdd={() => !isTrainingEditing && setIsTrainingModalOpen(true)}
+          // onAdd={() => !isTrainingEditing && setIsTrainingModalOpen(true)}
           pagination={{
             currentPage: trainPage,
             totalPages: Math.ceil(trainTotal / trainPageSize),
@@ -701,7 +701,7 @@ const DigitalMaturity = () => {
               className={`flex items-center gap-2 px-4 py-2 border rounded-lg font-medium transition-all ${
                 isAssessmentEditing
                   ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                  : "border-blue-600 text-blue-600 hover:bg-blue-50"
+                  : "border-green-600 text-green-600 hover:bg-green-50"
               }`}
             >
               <UploadIcon size={18} />
@@ -723,7 +723,7 @@ const DigitalMaturity = () => {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors shadow-sm ${
                 isAssessmentEditing
                   ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-green-600 text-white hover:bg-green-700"
               }`}
             >
               <Plus size={18} />
@@ -732,7 +732,7 @@ const DigitalMaturity = () => {
           </div>
         </div>
         <DataTable
-          title={`Digital Maturity Assessment ${isAssessmentEditing ? "(Edit Mode Active)" : ""}`}
+          // title={`Digital Maturity Assessment ${isAssessmentEditing ? "(Edit Mode Active)" : ""}`}
           isLoading={isLoading}
           columns={[
             { header: "Sr No.", render: (_, i) => i + 1 },
@@ -870,7 +870,7 @@ const DigitalMaturity = () => {
             },
           ]}
           data={assessments}
-          onAdd={() => !isAssessmentEditing && setIsMaturityModalOpen(true)}
+          // onAdd={() => !isAssessmentEditing && setIsMaturityModalOpen(true)}
           pagination={{
             currentPage: assessPage,
             totalPages: Math.ceil(assessTotal / assessPageSize),

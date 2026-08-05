@@ -205,7 +205,7 @@ const Admin = () => {
           </div>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all font-bold shadow-lg shadow-blue-500/20"
+            className="flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-xl hover:bg-green-700 transition-all font-bold shadow-lg shadow-green-500/20"
           >
             <Plus size={18} />
             Create New User

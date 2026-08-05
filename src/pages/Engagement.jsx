@@ -4,6 +4,7 @@ import Modal from "../components/Modal";
 import api from "../utils/api";
 import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
+import { Plus } from "lucide-react";
 
 const Engagement = () => {
   const { user, isSuperAdmin } = useAuth();
@@ -396,6 +397,20 @@ const Engagement = () => {
             >
               {isEventEditing ? "✓ Save Changes" : "✎ Enable Edit Mode"}
             </button>
+
+            <button
+              onClick={() => {
+                setIsEventModalOpen(true);
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors shadow-sm ${
+                isEventEditing
+                  ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  : "bg-green-600 text-white hover:bg-green-700"
+              }`}
+            >
+              <Plus size={18} />
+              Add Event
+            </button>
             {isEventEditing && (
               <button
                 onClick={handleCancelEvents}
@@ -407,7 +422,7 @@ const Engagement = () => {
           </div>
         </div>
         <DataTable
-          title={`Events & Programs ${isEventEditing ? "(Edit Mode Active)" : ""}`}
+          // title={`Events & Programs ${isEventEditing ? "(Edit Mode Active)" : ""}`}
           isLoading={isLoading}
           columns={[
             {
@@ -526,7 +541,7 @@ const Engagement = () => {
             },
           ]}
           data={events}
-          onAdd={() => !isEventEditing && setIsEventModalOpen(true)}
+          // onAdd={() => !isEventEditing && setIsEventModalOpen(true)}
           pagination={{
             currentPage: eventPage,
             totalPages: Math.ceil(eventTotal / eventPageSize),
@@ -564,6 +579,20 @@ const Engagement = () => {
             >
               {isCollaborationEditing ? "✓ Save Changes" : "✎ Enable Edit Mode"}
             </button>
+
+            <button
+              onClick={() => {
+                setIsCollaborationModalOpen(true);
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors shadow-sm ${
+                isCollaborationEditing
+                  ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  : "bg-green-600 text-white hover:bg-green-700"
+              }`}
+            >
+              <Plus size={18} />
+              Add Collaboration
+            </button>
             {isCollaborationEditing && (
               <button
                 onClick={handleCancelCollaborations}
@@ -575,7 +604,7 @@ const Engagement = () => {
           </div>
         </div>
         <DataTable
-          title={`Collaborations ${isCollaborationEditing ? "(Edit Mode Active)" : ""}`}
+          // title={`Collaborations ${isCollaborationEditing ? "(Edit Mode Active)" : ""}`}
           isLoading={isLoading}
           columns={[
             {
@@ -706,9 +735,9 @@ const Engagement = () => {
             },
           ]}
           data={collaborations}
-          onAdd={() =>
-            !isCollaborationEditing && setIsCollaborationModalOpen(true)
-          }
+          // onAdd={() =>
+          //   !isCollaborationEditing && setIsCollaborationModalOpen(true)
+          // }
           pagination={{
             currentPage: collabPage,
             totalPages: Math.ceil(collabTotal / collabPageSize),
@@ -748,6 +777,21 @@ const Engagement = () => {
             >
               {isSocialMediaEditing ? "✓ Save Changes" : "✎ Enable Edit Mode"}
             </button>
+
+            <button
+            onClick={() => {
+              setIsSocialMediaModalOpen(true);
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors shadow-sm ${
+              isSocialMediaEditing
+                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                : "bg-green-600 text-white hover:bg-green-700"
+              }`}
+            >
+              <Plus size={18} />
+              Add Social Media Post
+            </button>
+
             {isSocialMediaEditing && (
               <button
                 onClick={handleCancelSocialMedia}
@@ -759,7 +803,7 @@ const Engagement = () => {
           </div>
         </div>
         <DataTable
-          title={`Social Media Posts / Website Updates ${isSocialMediaEditing ? "(Edit Mode Active)" : ""}`}
+          // title={`Social Media Posts / Website Updates ${isSocialMediaEditing ? "(Edit Mode Active)" : ""}`}
           isLoading={isLoading}
           columns={[
             {
@@ -891,7 +935,7 @@ const Engagement = () => {
             },
           ]}
           data={socialMediaPosts}
-          onAdd={() => !isSocialMediaEditing && setIsSocialMediaModalOpen(true)}
+          // onAdd={() => !isSocialMediaEditing && setIsSocialMediaModalOpen(true)}
           pagination={{
             currentPage: socialPage,
             totalPages: Math.ceil(socialTotal / socialPageSize),
@@ -1024,7 +1068,7 @@ const Engagement = () => {
             </button>
             <button
               onClick={handleAddEvent}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-500/20 font-bold"
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-500/20 font-bold"
             >
               Add Event
             </button>
@@ -1287,7 +1331,7 @@ const Engagement = () => {
             </button>
             <button
               onClick={handleAddSocialMedia}
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-lg shadow-purple-500/20 font-bold"
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-lg shadow-green-500/20 font-bold"
             >
               Add Post
             </button>

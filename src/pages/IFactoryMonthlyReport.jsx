@@ -1095,11 +1095,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { Printer, Save, Plus, Upload, X, Trash2 } from "lucide-react";
 import ifactorylogo from "../assets/images/iFactoryLogo.png";
 import c4i4Logo from "../assets/images/c4i4Logo.png";
-// Import your PDF images
-import pdfImage1 from "../assets/pdfimages/pdfimage1.png"; // Adjust path as needed
-import pdfImage2 from "../assets/pdfimages/pdfimage2.png"; // Adjust path as needed
 import api from "../utils/api";
+import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
+import { useConfirmDialog } from "../components/ConfirmDialog";
 
 const IFactoryMonthlyReport = () => {
   const getCurrentMonthYear = () => {
@@ -1111,6 +1110,7 @@ const IFactoryMonthlyReport = () => {
   };
 
   const { user, isSuperAdmin, isAdmin } = useAuth();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
   const fileInputRef = useRef(null);
   const [filterLocation, setFilterLocation] = useState("All Locations");
   const [availableLocations, setAvailableLocations] = useState(["All Locations"]);
@@ -1532,10 +1532,17 @@ const IFactoryMonthlyReport = () => {
     setUploadedImages([...uploadedImages, ...newImages]);
   };
 
-  const removeImage = (id) => {
+  const removeImage = async (id) => {
+    const ok = await confirm({
+      title: "Remove Image",
+      message: "Are you sure you want to remove this image?",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     const img = uploadedImages.find((i) => i.id === id);
     if (img) URL.revokeObjectURL(img.url);
     setUploadedImages(uploadedImages.filter((img) => img.id !== id));
+    notify.success("Image removed successfully!");
   };
 
   const updateImageCaption = (id, caption) => {
@@ -1544,13 +1551,27 @@ const IFactoryMonthlyReport = () => {
     );
   };
 
-  const removeAchievement = (index) => {
+  const removeAchievement = async (index) => {
+    const ok = await confirm({
+      title: "Remove Achievement",
+      message: "Are you sure you want to remove this achievement row?",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     const updated = achievements.filter((_, i) => i !== index);
     setAchievements(updated.map((item, i) => ({ ...item, sr: i + 1 })));
+    notify.success("Achievement removed successfully!");
   };
-  const removeFeedback = (index) => {
+  const removeFeedback = async (index) => {
+    const ok = await confirm({
+      title: "Remove Feedback",
+      message: "Are you sure you want to remove this feedback row?",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     const updated = feedback.filter((_, i) => i !== index);
     setFeedback(updated.map((item, i) => ({ ...item, sr: i + 1 })));
+    notify.success("Feedback removed successfully!");
   };
   const handleSave = () => {
     const data = {
@@ -1566,7 +1587,7 @@ const IFactoryMonthlyReport = () => {
       savedAt: new Date().toISOString(),
     };
     localStorage.setItem("iFactoryMonthlyReport", JSON.stringify(data));
-    alert("Report saved successfully!");
+    notify.success("Report saved successfully!");
   };
 
   const handlePrint = () => {
@@ -1706,29 +1727,7 @@ const IFactoryMonthlyReport = () => {
 
       {/* Report Container */}
       <div className="max-w-7xl mx-auto p-8 bg-white print:p-4">
-        {/* ==================== PAGE 1: PDF IMAGE 1 ==================== */}
-        {/* <div className="mb-8 page-break">
-          <div className="w-full">
-            <img
-              src={pdfImage1}
-              alt="iFactory Report Page 1"
-              className="w-full h-auto"
-              style={{ maxWidth: "100%", height: "auto" }}
-            />
-          </div>
-        </div> */}
-
-        {/* ==================== PAGE 2: PDF IMAGE 2 ==================== */}
-        {/* <div className="mb-8 page-break">
-          <div className="w-full">
-            <img
-              src={pdfImage2}
-              alt="iFactory Report Page 2"
-              className="w-full h-auto"
-              style={{ maxWidth: "100%", height: "auto" }}
-            />
-          </div>
-        </div> */}
+      
 
         {/* ==================== PAGE 3: HEADER WITH LOGOS ==================== */}
         <div className="page-break">
@@ -2556,6 +2555,7 @@ const IFactoryMonthlyReport = () => {
           }
         }
       `}</style>
+      {confirmDialog}
     </div>
   );
 };

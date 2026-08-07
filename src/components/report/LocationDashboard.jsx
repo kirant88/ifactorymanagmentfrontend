@@ -1,5 +1,6 @@
 import React from "react";
 import { BRAND } from "../../constants/reportConstants";
+import GlimpsesOfMonthUploader from "./GlimpsesOfMonthUploader";
 
 export const Gauge = ({ value, max = 100, baseline = 49 }) => {
   const pct = Math.min(value / max, 1);
@@ -281,12 +282,22 @@ const GlimpsesOfTheMonth = ({ glimpses }) => {
   );
 };
 
-const LocationDashboard = ({ loc, data, monthYear, glimpses = null }) => {
+const LocationDashboard = ({
+  loc,
+  data,
+  monthYear,
+  glimpses = null,
+  month,
+  year,
+  onGlimpsesRefresh,
+}) => {
   const trainings = data.trainings ?? [];
   const visitors = data.visitors ?? [];
   const assessments = data.assessments ?? [];
   const events = data.events ?? [];
   const collaborations = data.collaborations ?? [];
+  const canUploadGlimpses =
+    typeof month === "number" && typeof year === "number" && typeof onGlimpsesRefresh === "function";
 
   const discoveryOrgs = new Set(visitors.map((v) => v.company).filter(Boolean)).size;
   const trainingOrgs = new Set(trainings.map((t) => t.organization_name).filter(Boolean)).size;
@@ -488,6 +499,26 @@ const LocationDashboard = ({ loc, data, monthYear, glimpses = null }) => {
             </div>
           </div>
         </div>
+
+        {canUploadGlimpses && (
+          <div
+            className="no-print"
+            style={{
+              padding: "0 20px 20px",
+              background: "#FAFAFA",
+              borderTop: "1px dashed #CFD8DC",
+            }}
+          >
+            <GlimpsesOfMonthUploader
+              location={loc}
+              month={month}
+              year={year}
+              record={glimpses}
+              onRefresh={onGlimpsesRefresh}
+              compact
+            />
+          </div>
+        )}
       </div>
     </div>
   );

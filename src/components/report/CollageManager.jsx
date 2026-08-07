@@ -3,6 +3,7 @@ import { Plus, Trash2, Save } from "lucide-react";
 import api from "../../utils/api";
 import { notify } from "../../utils/toast";
 import { BRAND, COLLAGE_IMAGE_COUNTS } from "../../constants/reportConstants";
+import { useConfirmDialog } from "../ConfirmDialog";
 
 const fileToBase64 = (file) =>
   new Promise((resolve, reject) => {
@@ -29,6 +30,7 @@ const CollageManager = ({
   const [editingId, setEditingId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const allowedCounts = imageCounts?.length ? imageCounts : COLLAGE_IMAGE_COUNTS;
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   const resetDraft = () => {
     setDraftTitle("");
@@ -60,8 +62,15 @@ const CollageManager = ({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const removeDraftImage = (idx) => {
+  const removeDraftImage = async (idx) => {
+    const ok = await confirm({
+      title: "Remove Image",
+      message: "Are you sure you want to remove this image?",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     setDraftImages((prev) => prev.filter((_, i) => i !== idx));
+    notify.success("Image removed successfully!");
   };
 
   const startEdit = (group) => {
@@ -113,10 +122,16 @@ const CollageManager = ({
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this collage group?")) return;
+    const ok = await confirm({
+      title: "Delete Collage",
+      message: "Are you sure you want to delete this collage group? This action cannot be undone.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     try {
       await api.delete(`/reports/collage-groups/${id}/`);
       onRefresh();
+      notify.success("Collage deleted successfully!");
     } catch (err) {
       console.error(err);
       notify.error("Failed to delete collage.");
@@ -330,6 +345,7 @@ const CollageManager = ({
         {allowedCounts.join(", ")} image{allowedCounts.length === 1 && allowedCounts[0] === 1 ? "" : "s"}{" "}
         per collage. Title appears below the images in the report.
       </p>
+      {confirmDialog}
     </div>
   );
 };

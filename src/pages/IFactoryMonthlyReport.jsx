@@ -1098,6 +1098,7 @@ import c4i4Logo from "../assets/images/c4i4Logo.png";
 import api from "../utils/api";
 import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
+import { useConfirmDialog } from "../components/ConfirmDialog";
 
 const IFactoryMonthlyReport = () => {
   const getCurrentMonthYear = () => {
@@ -1109,6 +1110,7 @@ const IFactoryMonthlyReport = () => {
   };
 
   const { user, isSuperAdmin, isAdmin } = useAuth();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
   const fileInputRef = useRef(null);
   const [filterLocation, setFilterLocation] = useState("All Locations");
   const [availableLocations, setAvailableLocations] = useState(["All Locations"]);
@@ -1530,10 +1532,17 @@ const IFactoryMonthlyReport = () => {
     setUploadedImages([...uploadedImages, ...newImages]);
   };
 
-  const removeImage = (id) => {
+  const removeImage = async (id) => {
+    const ok = await confirm({
+      title: "Remove Image",
+      message: "Are you sure you want to remove this image?",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     const img = uploadedImages.find((i) => i.id === id);
     if (img) URL.revokeObjectURL(img.url);
     setUploadedImages(uploadedImages.filter((img) => img.id !== id));
+    notify.success("Image removed successfully!");
   };
 
   const updateImageCaption = (id, caption) => {
@@ -1542,13 +1551,27 @@ const IFactoryMonthlyReport = () => {
     );
   };
 
-  const removeAchievement = (index) => {
+  const removeAchievement = async (index) => {
+    const ok = await confirm({
+      title: "Remove Achievement",
+      message: "Are you sure you want to remove this achievement row?",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     const updated = achievements.filter((_, i) => i !== index);
     setAchievements(updated.map((item, i) => ({ ...item, sr: i + 1 })));
+    notify.success("Achievement removed successfully!");
   };
-  const removeFeedback = (index) => {
+  const removeFeedback = async (index) => {
+    const ok = await confirm({
+      title: "Remove Feedback",
+      message: "Are you sure you want to remove this feedback row?",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     const updated = feedback.filter((_, i) => i !== index);
     setFeedback(updated.map((item, i) => ({ ...item, sr: i + 1 })));
+    notify.success("Feedback removed successfully!");
   };
   const handleSave = () => {
     const data = {
@@ -2532,6 +2555,7 @@ const IFactoryMonthlyReport = () => {
           }
         }
       `}</style>
+      {confirmDialog}
     </div>
   );
 };

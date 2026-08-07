@@ -3,6 +3,7 @@ import { Printer, Save, Plus, Trash2 } from "lucide-react";
 import api from "../utils/api";
 import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
+import { useConfirmDialog } from "../components/ConfirmDialog";
 import ReportPage, { SectionTitle } from "../components/report/ReportPage";
 import CoverPage from "../components/report/CoverPage";
 import ContentsPage from "../components/report/ContentsPage";
@@ -10,7 +11,6 @@ import NetworkPage from "../components/report/NetworkPage";
 import OurFocusPage from "../components/report/OurFocusPage";
 import { CollagePage } from "../components/report/CollageGrid";
 import CollageManager from "../components/report/CollageManager";
-import GlimpsesOfMonthUploader from "../components/report/GlimpsesOfMonthUploader";
 import LocationDashboard from "../components/report/LocationDashboard";
 import { HBarChart } from "../components/report/LocationDashboard";
 import keyAchievementsCollage from "../assets/pdfimages/key-achievements-collage.png";
@@ -39,6 +39,7 @@ const chunkCollagePages = (groups, perPage = 2) => {
 
 const OverallMonthlyReport = () => {
   const { isSuperAdmin } = useAuth();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [locationData, setLocationData] = useState({});
@@ -252,8 +253,15 @@ const OverallMonthlyReport = () => {
     setNewAchievement("");
   };
 
-  const removeAchievement = (idx) => {
+  const removeAchievement = async (idx) => {
+    const ok = await confirm({
+      title: "Remove Achievement",
+      message: "Are you sure you want to remove this achievement?",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     setKeyAchievements((prev) => prev.filter((_, i) => i !== idx));
+    notify.success("Achievement removed successfully!");
   };
 
   const updateAchievement = (idx, value) => {
@@ -549,13 +557,6 @@ const OverallMonthlyReport = () => {
               return (
                 <React.Fragment key={loc}>
                   <div className="no-print">
-                    <GlimpsesOfMonthUploader
-                      location={loc}
-                      month={selectedMonth}
-                      year={selectedYear}
-                      record={glimpses}
-                      onRefresh={fetchLocationGlimpses}
-                    />
                     <CollageManager
                       title={`${loc} — Location Collage upload (bulk / multi-image pages)`}
                       sectionType={SECTION_TYPES.LOCATION}
@@ -573,6 +574,14 @@ const OverallMonthlyReport = () => {
                       data={data}
                       monthYear={monthYear}
                       glimpses={glimpses}
+                      month={selectedMonth}
+                      year={selectedYear}
+                      onGlimpsesRefresh={(next) =>
+                        setLocationGlimpses((prev) => ({
+                          ...prev,
+                          [loc]: next ?? null,
+                        }))
+                      }
                     />
                   </ReportPage>
 
@@ -1047,6 +1056,7 @@ const OverallMonthlyReport = () => {
           }
         }
       `}</style>
+      {confirmDialog}
     </div>
   );
 };

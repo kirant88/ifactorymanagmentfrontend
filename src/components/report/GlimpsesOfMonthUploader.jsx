@@ -3,6 +3,7 @@ import { Save, Trash2, ImagePlus } from "lucide-react";
 import api from "../../utils/api";
 import { notify } from "../../utils/toast";
 import { BRAND } from "../../constants/reportConstants";
+import { useConfirmDialog } from "../ConfirmDialog";
 
 const MAX_IMAGES = 2;
 
@@ -24,11 +25,13 @@ const GlimpsesOfMonthUploader = ({
   year,
   record,
   onRefresh,
+  compact = false,
 }) => {
   const fileInputRef = useRef(null);
   const [title, setTitle] = useState("");
   const [images, setImages] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
 
   useEffect(() => {
     setTitle(record?.title || "");
@@ -56,8 +59,15 @@ const GlimpsesOfMonthUploader = ({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const removeImage = (idx) => {
+  const removeImage = async (idx) => {
+    const ok = await confirm({
+      title: "Remove Image",
+      message: "Are you sure you want to remove this image?",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     setImages((prev) => prev.filter((_, i) => i !== idx));
+    notify.success("Image removed successfully!");
   };
 
   const handleSave = async () => {
@@ -78,16 +88,21 @@ const GlimpsesOfMonthUploader = ({
       title: title.trim(),
       images,
     };
+    const previous = record ?? null;
+    onRefresh?.({
+      ...(record || {}),
+      ...payload,
+      id: record?.id,
+    });
 
     try {
-      if (record?.id) {
-        await api.patch(`/reports/glimpses-month/${record.id}/`, payload);
-      } else {
-        await api.post("/reports/glimpses-month/", payload);
-      }
-      onRefresh?.();
+      const res = record?.id
+        ? await api.patch(`/reports/glimpses-month/${record.id}/`, payload)
+        : await api.post("/reports/glimpses-month/", payload);
+      onRefresh?.(res.data);
       notify.success("Glimpses of the Month saved!");
     } catch (err) {
+      onRefresh?.(previous);
       console.error(err);
       const detail =
         err.response?.data?.images?.[0] ||
@@ -102,17 +117,35 @@ const GlimpsesOfMonthUploader = ({
 
   const handleDelete = async () => {
     if (!record?.id) {
+      const ok = await confirm({
+        title: "Clear Glimpses",
+        message: "Are you sure you want to clear the current glimpses content?",
+        confirmLabel: "Remove",
+      });
+      if (!ok) return;
       setTitle("");
       setImages([]);
+      onRefresh?.(null);
+      notify.success("Glimpses cleared successfully!");
       return;
     }
-    if (!window.confirm("Remove Glimpses of the Month for this location?")) return;
+    const ok = await confirm({
+      title: "Remove Glimpses",
+      message: "Are you sure you want to remove Glimpses of the Month for this location? This action cannot be undone.",
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
+    const previous = record;
+    setTitle("");
+    setImages([]);
+    onRefresh?.(null);
     try {
       await api.delete(`/reports/glimpses-month/${record.id}/`);
-      setTitle("");
-      setImages([]);
-      onRefresh?.();
+      notify.success("Glimpses deleted successfully!");
     } catch (err) {
+      onRefresh?.(previous);
+      setTitle(previous.title || "");
+      setImages(Array.isArray(previous.images) ? previous.images.slice(0, MAX_IMAGES) : []);
       console.error(err);
       notify.error("Failed to delete glimpses.");
     }
@@ -124,12 +157,13 @@ const GlimpsesOfMonthUploader = ({
       style={{
         background: "#E8F5E9",
         borderRadius: 12,
-        padding: 20,
-        marginBottom: 16,
+        padding: compact ? 14 : 20,
+        marginBottom: compact ? 0 : 16,
+        marginTop: compact ? 16 : 0,
         border: "1px solid #A5D6A7",
       }}
     >
-      <h4 style={{ margin: "0 0 6px", color: "#1B5E20", fontWeight: 700 }}>
+      <h4 style={{ margin: "0 0 6px", color: "#1B5E20", fontWeight: 700, fontSize: compact ? 14 : undefined }}>
         {location} — Glimpses of the Month (card report)
       </h4>
       <p style={{ margin: "0 0 14px", fontSize: 12, color: "#546E7A" }}>
@@ -188,7 +222,7 @@ const GlimpsesOfMonthUploader = ({
             gridTemplateColumns: "1fr 1fr",
             gap: 12,
             marginBottom: 14,
-            maxWidth: 420,
+            maxWidth: compact ? 360 : 420,
           }}
         >
           {images.map((img, idx) => (
@@ -198,7 +232,7 @@ const GlimpsesOfMonthUploader = ({
                 alt={img.image_name || `Glimpse ${idx + 1}`}
                 style={{
                   width: "100%",
-                  height: 110,
+                  height: compact ? 90 : 110,
                   objectFit: "cover",
                   borderRadius: 8,
                   border: "2px solid #D4C4A8",
@@ -269,6 +303,7 @@ const GlimpsesOfMonthUploader = ({
           </button>
         )}
       </div>
+      {confirmDialog}
     </div>
   );
 };

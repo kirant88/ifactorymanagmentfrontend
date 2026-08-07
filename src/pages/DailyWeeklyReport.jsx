@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { Plus, Calendar as CalendarIcon, FileText, ChevronLeft, ChevronRight, X, ExternalLink, Trash2 } from "lucide-react";
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
+import { useConfirmDialog } from "../components/ConfirmDialog";
 import api from "../utils/api";
 import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
 
 const DailyWeeklyReport = () => {
   const { user } = useAuth();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
   const [activeTab, setActiveTab] = useState("daily");
   
   // Daily Report State
@@ -330,9 +332,18 @@ const DailyWeeklyReport = () => {
                 render: (row) => (
                   <button
                     onClick={async () => {
-                      if (window.confirm("Delete this report?")) {
+                      const ok = await confirm({
+                        title: "Delete Report",
+                        message: "Are you sure you want to delete this weekly report? This action cannot be undone.",
+                        confirmLabel: "Delete",
+                      });
+                      if (!ok) return;
+                      try {
                         await api.delete(`/reports/weekly-social/${row.id}/`);
                         fetchWeeklyReports();
+                        notify.success("Weekly report deleted successfully!");
+                      } catch (error) {
+                        notify.error("Failed to delete weekly report.");
                       }
                     }}
                     className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -550,10 +561,19 @@ const DailyWeeklyReport = () => {
                 <span>Added by: {report.added_by_name}</span>
                 <button
                   onClick={async () => {
-                    if (window.confirm("Delete this daily report?")) {
+                    const ok = await confirm({
+                      title: "Delete Daily Report",
+                      message: "Are you sure you want to delete this daily report? This action cannot be undone.",
+                      confirmLabel: "Delete",
+                    });
+                    if (!ok) return;
+                    try {
                       await api.delete(`/reports/daily-pump/${report.id}/`);
                       setIsDetailModalOpen(false);
                       fetchDailyReports();
+                      notify.success("Daily report deleted successfully!");
+                    } catch (error) {
+                      notify.error("Failed to delete daily report.");
                     }
                   }}
                   className="text-red-500 hover:text-red-700 font-bold"
@@ -574,6 +594,7 @@ const DailyWeeklyReport = () => {
           </div>
         </div>
       </Modal>
+      {confirmDialog}
     </div>
   );
 };

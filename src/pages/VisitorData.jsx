@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { Edit2, Trash2, UploadIcon } from "lucide-react";
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
+import { useConfirmDialog } from "../components/ConfirmDialog";
 import api from "../utils/api";
 import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
 
 const VisitorData = () => {
   const { user, isSuperAdmin } = useAuth();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
   const [visitors, setVisitors] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isVisitorModalOpen, setIsVisitorModalOpen] = useState(false);
@@ -260,10 +262,16 @@ const VisitorData = () => {
   };
 
   const handleDeleteVisitor = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this visitor?")) return;
+    const ok = await confirm({
+      title: "Delete Visitor",
+      message: "Are you sure you want to delete this visitor? This action cannot be undone.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     try {
       await api.delete(`/visitors/${id}/`);
       fetchVisitors();
+      notify.success("Visitor deleted successfully!");
     } catch (error) {
       notify.error("Failed to delete visitor.");
     }
@@ -799,6 +807,7 @@ const VisitorData = () => {
           </div>
         </div>
       </Modal>
+      {confirmDialog}
     </div>
   );
 };

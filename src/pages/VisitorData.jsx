@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, UploadIcon } from "lucide-react";
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
+import { useConfirmDialog } from "../components/ConfirmDialog";
 import api from "../utils/api";
+import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
 
 const VisitorData = () => {
   const { user, isSuperAdmin } = useAuth();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
   const [visitors, setVisitors] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isVisitorModalOpen, setIsVisitorModalOpen] = useState(false);
@@ -98,7 +101,7 @@ const VisitorData = () => {
       link.click();
       link.remove();
     } catch (error) {
-      alert("Failed to download template.");
+      notify.error("Failed to download template.");
     }
   };
 
@@ -202,7 +205,7 @@ const VisitorData = () => {
       setSelectedIds([]); // Clear selection after bulk update
     } catch (error) {
       console.error("Error saving visitors:", error);
-      alert("Error saving visitors. Please check your data.");
+      notify.error("Error saving visitors. Please check your data.");
     }
   };
 
@@ -249,22 +252,28 @@ const VisitorData = () => {
       await Promise.all(promises);
       await fetchVisitors();
       setIsInlineEditing(false);
-      alert("All changes saved successfully!");
+      notify.success("All changes saved successfully!");
     } catch (error) {
       console.error("Error saving inline edits:", error);
-      alert("Failed to save changes. Please check your data.");
+      notify.error("Failed to save changes. Please check your data.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDeleteVisitor = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this visitor?")) return;
+    const ok = await confirm({
+      title: "Delete Visitor",
+      message: "Are you sure you want to delete this visitor? This action cannot be undone.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     try {
       await api.delete(`/visitors/${id}/`);
       fetchVisitors();
+      notify.success("Visitor deleted successfully!");
     } catch (error) {
-      alert("Failed to delete visitor.");
+      notify.error("Failed to delete visitor.");
     }
   };
 
@@ -281,7 +290,7 @@ const VisitorData = () => {
       setIsBulkUploadOpen(false);
       setUploadFile(null);
     } catch (error) {
-      alert("Bulk upload failed. Ensure the file format is correct.");
+      notify.error("Bulk upload failed. Ensure the file format is correct.");
     }
   };
 
@@ -375,8 +384,12 @@ const VisitorData = () => {
           {!isInlineEditing && (
             <button
               onClick={() => setIsBulkUploadOpen(true)}
-              className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-all font-medium"
-            >
+              className={`flex items-center gap-2 px-4 py-2 border rounded-lg font-medium transition-all ${
+                isInlineEditing
+                  ? "border-gray-300 text-gray-400 cursor-not-allowed"
+                  : "border-green-600 text-green-600 hover:bg-green-50"
+              }`}  >
+              <UploadIcon size={18} />
               Bulk Upload
             </button>
           )}
@@ -386,7 +399,7 @@ const VisitorData = () => {
               resetForm();
               setIsVisitorModalOpen(true);
             }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all font-medium"
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-lg  transition-all font-medium"
           >
             + Register Visitor
           </button>
@@ -551,9 +564,25 @@ const VisitorData = () => {
         isOpen={isVisitorModalOpen}
         onClose={() => setIsVisitorModalOpen(false)}
         title={isEditing ? "Edit iFactory Visitor" : "Add iFactory Visitors"}
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setIsVisitorModalOpen(false)}
+              className="px-6 py-2 text-gray-500 font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveOrUpdate}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md font-medium transition-all"
+            >
+              {isEditing ? "Update & Save All" : "Save All Visitors"}
+            </button>
+          </div>
+        }
       >
-        <div className="space-y-6">
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <div className="space-y-4">
+          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
             <p className="text-xs text-blue-800">
               Fill details for visitors belonging to the same organization. For
               multiple people, increase "No. of Entries".
@@ -565,19 +594,11 @@ const VisitorData = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Date
               </label>
-              {/* <input
-                type="date"
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                value={formData.date}
-                onChange={(e) =>
-                  setFormData({ ...formData, date: e.target.value })
-                }
-              /> */}
               <input
                 type="date"
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.date}
-                max={new Date().toISOString().split("T")[0]} // ← add this
+                max={new Date().toISOString().split("T")[0]}
                 onChange={(e) =>
                   setFormData({ ...formData, date: e.target.value })
                 }
@@ -599,76 +620,17 @@ const VisitorData = () => {
             </div>
           </div>
 
-          {/* <div className="grid grid-cols-3 gap-4">
+          <div
+            className={`grid gap-4 ${
+              formData.categories === "Industrial"
+                ? "grid-cols-3"
+                : "grid-cols-2"
+            }`}
+          >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Entries
               </label>
-              <input
-                type="number"
-                min="1"
-                max="10"
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none hover:border-blue-400 transition-colors"
-                value={formData.numEntries}
-                onChange={(e) =>
-                  handleNumEntriesChange(parseInt(e.target.value) || 1)
-                }
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
-              <select
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none hover:border-blue-400 transition-colors"
-                value={formData.categories}
-                onChange={(e) =>
-                  setFormData({ ...formData, categories: e.target.value })
-                }
-              >
-                <option value="">Select Category</option>
-                <option value="Industrial">Industrial</option>
-                <option value="Government">Government</option>
-                <option value="Academic">Academic</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Industry
-              </label>
-              <select
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none hover:border-blue-400 transition-colors"
-                value={formData.industryType}
-                onChange={(e) =>
-                  setFormData({ ...formData, industryType: e.target.value })
-                }
-              >
-                <option value="">Select Type</option>
-                <option value="MSME">MSME</option>
-                <option value="OEM">OEM</option>
-                <option value="Start-Up">Start-Up</option>
-              </select>
-            </div>
-          </div> */}
-
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Entries
-              </label>
-
-              
-              {/* <input
-                type="number"
-                min="1"
-                max="10"
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none hover:border-blue-400 transition-colors"
-                value={formData.numEntries}
-                onChange={(e) =>
-                  handleNumEntriesChange(parseInt(e.target.value) || 1)
-                }
-              /> */}
-              
               <input
                 type="number"
                 min="1"
@@ -706,7 +668,6 @@ const VisitorData = () => {
               </select>
             </div>
 
-            {/* Only show Industry Type when category is Industrial */}
             {formData.categories === "Industrial" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -727,32 +688,34 @@ const VisitorData = () => {
               </div>
             )}
           </div>
-          <div className="grid  gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-800 mb-1">
-                Photo Link{" "}
-              </label>
-              <input
-                type="text"
-                placeholder="Google drive photograph link"
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                value={formData.photograph_link}
-                onChange={(e) =>
-                  setFormData({ ...formData, photograph_link: e.target.value })
-                }
-              />
-            </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-800 mb-1">
+              Photo Link
+            </label>
+            <input
+              type="text"
+              placeholder="Google drive photograph link"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              value={formData.photograph_link}
+              onChange={(e) =>
+                setFormData({ ...formData, photograph_link: e.target.value })
+              }
+            />
           </div>
 
           <div className="border-t pt-4">
-            <h3 className="font-semibold text-gray-800 mb-3">
-              Visitor Details
-            </h3>
-            <div className="space-y-4 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-gray-800">Visitor Details</h3>
+              <span className="text-xs text-gray-500">
+                {formData.entries.length} of 10 max
+              </span>
+            </div>
+            <div className="space-y-3 max-h-[min(14rem,28vh)] overflow-y-auto pr-2">
               {formData.entries.map((entry, index) => (
                 <div
                   key={index}
-                  className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                  className="p-3 bg-gray-50 rounded-lg border border-gray-200"
                 >
                   <div className="grid grid-cols-2 gap-3">
                     <input
@@ -783,21 +746,6 @@ const VisitorData = () => {
                 </div>
               ))}
             </div>
-          </div>
-
-          <div className="pt-4 flex justify-end gap-3 border-t">
-            <button
-              onClick={() => setIsVisitorModalOpen(false)}
-              className="px-6 py-2 text-gray-500 font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSaveOrUpdate}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md font-medium transition-all"
-            >
-              {isEditing ? "Update & Save All" : "Save All Visitors"}
-            </button>
           </div>
         </div>
       </Modal>
@@ -859,6 +807,7 @@ const VisitorData = () => {
           </div>
         </div>
       </Modal>
+      {confirmDialog}
     </div>
   );
 };

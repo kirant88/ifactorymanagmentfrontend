@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
+import { useConfirmDialog } from "../components/ConfirmDialog";
 import api from "../utils/api";
+import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
-import { Users, UserCheck, ShieldAlert, Plus, Trash2, Key, Edit, Info } from "lucide-react";
+import { Users, UserCheck, ShieldAlert, Plus, Trash2, Key, Edit, Info, Eye, EyeOff } from "lucide-react";
 
 const Admin = () => {
   const { user: currentUser } = useAuth();
+  const { confirm, dialog: confirmDialog } = useConfirmDialog();
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +43,11 @@ const Admin = () => {
     password: "",
     password_confirm: "",
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -91,6 +99,8 @@ const Admin = () => {
       password_confirm: "",
       is_active: true,
     });
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     setIsModalOpen(true);
   };
 
@@ -113,6 +123,8 @@ const Admin = () => {
   const openPasswordModal = (user) => {
     setSelectedUser(user);
     setPasswordData({ password: "", password_confirm: "" });
+    setShowResetPassword(false);
+    setShowResetConfirmPassword(false);
     setIsPasswordModalOpen(true);
   };
 
@@ -122,7 +134,7 @@ const Admin = () => {
     try {
       if (modalMode === "create") {
         if (formData.password !== formData.password_confirm) {
-          alert("Passwords do not match!");
+          notify.error("Passwords do not match!");
           return;
         }
         await api.post("/auth/register/", formData);
@@ -133,41 +145,47 @@ const Admin = () => {
       setIsModalOpen(false);
       fetchUsers();
       fetchStats();
+      notify.success(modalMode === "create" ? "User created successfully!" : "User updated successfully!");
     } catch (error) {
       const errorMsg = error.response?.data ? Object.values(error.response.data)[0] : "Operation failed";
-      alert(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
+      notify.error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
     }
   };
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
     if (passwordData.password !== passwordData.password_confirm) {
-      alert("Passwords do not match!");
+      notify.error("Passwords do not match!");
       return;
     }
 
     try {
       await api.post(`/auth/users/${selectedUser.id}/reset-password/`, passwordData);
       setIsPasswordModalOpen(false);
-      alert("Password reset successfully!");
+      notify.success("Password reset successfully!");
     } catch (error) {
-      alert("Failed to reset password.");
+      notify.error("Failed to reset password.");
     }
   };
 
   const handleDeleteUser = async (userId) => {
     if (userId === currentUser.user_id) {
-      alert("You cannot delete yourself!");
+      notify.info("You cannot delete yourself!");
       return;
     }
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      try {
-        await api.delete(`/auth/users/${userId}/`);
-        fetchUsers();
-        fetchStats();
-      } catch (error) {
-        alert("Failed to delete user.");
-      }
+    const ok = await confirm({
+      title: "Delete User",
+      message: "Are you sure you want to delete this user? This action cannot be undone.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
+    try {
+      await api.delete(`/auth/users/${userId}/`);
+      fetchUsers();
+      fetchStats();
+      notify.success("User deleted successfully!");
+    } catch (error) {
+      notify.error("Failed to delete user.");
     }
   };
 
@@ -202,7 +220,7 @@ const Admin = () => {
           </div>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all font-bold shadow-lg shadow-blue-500/20"
+            className="flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-xl hover:bg-green-700 transition-all font-bold shadow-lg shadow-green-500/20"
           >
             <Plus size={18} />
             Create New User
@@ -287,7 +305,15 @@ const Admin = () => {
         onClose={() => setIsModalOpen(false)}
         title={modalMode === "create" ? "Create New User Account" : "Edit User Details"}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 relative" autoComplete="off">
+          {/* Hidden decoy fields to prevent browser autofill of saved login credentials */}
+          {modalMode === "create" && (
+            <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden opacity-0">
+              <input type="email" name="fake-email" tabIndex={-1} autoComplete="username" />
+              <input type="password" name="fake-password" tabIndex={-1} autoComplete="current-password" />
+            </div>
+          )}
+
           {modalMode === "edit" && (
             <div className="p-3 bg-blue-50 rounded-xl flex items-start gap-3 border border-blue-100 mb-4">
               <Info className="text-blue-500 mt-0.5" size={18} />
@@ -306,6 +332,7 @@ const Admin = () => {
                 className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.first_name}
                 onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                autoComplete="off"
               />
             </div>
             <div>
@@ -315,6 +342,7 @@ const Admin = () => {
                 className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.last_name}
                 onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                autoComplete="off"
               />
             </div>
           </div>
@@ -325,6 +353,8 @@ const Admin = () => {
               <input
                 required
                 type="email"
+                name="new-user-email"
+                autoComplete="off"
                 className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -396,23 +426,49 @@ const Admin = () => {
                 <label className="block text-xs font-bold text-gray-700 mb-1 uppercase flex items-center gap-1">
                   <Key size={12} /> Password
                 </label>
-                <input
-                  required
-                  type="password"
-                  className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
+                <div className="relative">
+                  <input
+                    required
+                    type={showPassword ? "text" : "password"}
+                    name="new-user-password"
+                    autoComplete="new-password"
+                    className="w-full px-4 py-2 pr-10 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    tabIndex={-1}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">Confirm Password</label>
-                <input
-                  required
-                  type="password"
-                  className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.password_confirm}
-                  onChange={(e) => setFormData({ ...formData, password_confirm: e.target.value })}
-                />
+                <div className="relative">
+                  <input
+                    required
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="new-user-password-confirm"
+                    autoComplete="new-password"
+                    className="w-full px-4 py-2 pr-10 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                    value={formData.password_confirm}
+                    onChange={(e) => setFormData({ ...formData, password_confirm: e.target.value })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    tabIndex={-1}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -441,7 +497,7 @@ const Admin = () => {
         onClose={() => setIsPasswordModalOpen(false)}
         title="Admin Password Reset"
       >
-        <form onSubmit={handleResetPassword} className="space-y-4">
+        <form onSubmit={handleResetPassword} className="space-y-4" autoComplete="off">
           <div className="p-3 bg-amber-50 rounded-xl flex items-start gap-3 border border-amber-100 mb-2">
             <Key className="text-amber-500 mt-0.5" size={18} />
             <p className="text-xs text-amber-700 leading-relaxed font-medium">
@@ -452,23 +508,49 @@ const Admin = () => {
 
           <div>
             <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">New Password</label>
-            <input
-              required
-              type="password"
-              className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-amber-500"
-              value={passwordData.password}
-              onChange={(e) => setPasswordData({ ...passwordData, password: e.target.value })}
-            />
+            <div className="relative">
+              <input
+                required
+                type={showResetPassword ? "text" : "password"}
+                name="reset-password"
+                autoComplete="new-password"
+                className="w-full px-4 py-2 pr-10 border rounded-xl outline-none focus:ring-2 focus:ring-amber-500"
+                value={passwordData.password}
+                onChange={(e) => setPasswordData({ ...passwordData, password: e.target.value })}
+              />
+              <button
+                type="button"
+                onClick={() => setShowResetPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                tabIndex={-1}
+                aria-label={showResetPassword ? "Hide password" : "Show password"}
+              >
+                {showResetPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">Confirm New Password</label>
-            <input
-              required
-              type="password"
-              className="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-amber-500"
-              value={passwordData.password_confirm}
-              onChange={(e) => setPasswordData({ ...passwordData, password_confirm: e.target.value })}
-            />
+            <div className="relative">
+              <input
+                required
+                type={showResetConfirmPassword ? "text" : "password"}
+                name="reset-password-confirm"
+                autoComplete="new-password"
+                className="w-full px-4 py-2 pr-10 border rounded-xl outline-none focus:ring-2 focus:ring-amber-500"
+                value={passwordData.password_confirm}
+                onChange={(e) => setPasswordData({ ...passwordData, password_confirm: e.target.value })}
+              />
+              <button
+                type="button"
+                onClick={() => setShowResetConfirmPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                tabIndex={-1}
+                aria-label={showResetConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showResetConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div className="pt-6 flex justify-end gap-3 border-t">
@@ -488,6 +570,7 @@ const Admin = () => {
           </div>
         </form>
       </Modal>
+      {confirmDialog}
     </div>
   );
 };

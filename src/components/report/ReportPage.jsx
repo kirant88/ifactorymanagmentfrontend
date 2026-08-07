@@ -12,6 +12,7 @@ export const ChevronAccent = ({ size = 28 }) => (
 
 export const ReportPageHeader = () => (
   <div
+    className="report-page-header"
     style={{
       display: "flex",
       alignItems: "center",
@@ -90,16 +91,21 @@ const ReportPage = ({
     }}
   >
     <div
+      className="report-page-body"
       style={{
         flex: 1,
-        padding: showHeader ? "28px 40px 24px" : "36px 48px",
+        padding: showHeader ? "28px 40px 16px" : "36px 48px",
         display: "flex",
         flexDirection: "column",
         minHeight: 0,
+        overflow: "hidden",
+        boxSizing: "border-box",
       }}
     >
       {showHeader && <ReportPageHeader />}
-      <div style={{ flex: 1 }}>{children}</div>
+      <div className="report-page-content" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+        {children}
+      </div>
     </div>
     {showFooter && pageNumber != null && <PageFooter pageNumber={pageNumber} />}
   </section>

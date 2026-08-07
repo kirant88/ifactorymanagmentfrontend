@@ -85,20 +85,17 @@ const ContentsPage = ({ locations = [] }) => {
       style={{
         display: "flex",
         minHeight: 900,
-        marginBottom: 24,
         boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-        borderRadius: 4,
         overflow: "hidden",
         background: "#FFFFFF",
         position: "relative",
-        padding: 0,
       }}
     >
       {/* Left blue sidebar */}
       <div
         style={{
-          width: "22%",
-          minWidth: 140,
+          width: "25%",
+          minWidth: 150,
           background: TOC_BLUE,
           position: "relative",
           display: "flex",
@@ -114,11 +111,11 @@ const ContentsPage = ({ locations = [] }) => {
         <div
           style={{
             color: "#FFFFFF",
-            fontSize: "clamp(28px, 4.2vw, 42px)",
-            fontWeight: 800,
-            letterSpacing: "0.18em",
+            fontSize: "80px",
+            fontWeight: 900,
+            letterSpacing: "0.12em",
             fontFamily: "'Segoe UI', Montserrat, Arial, Helvetica, sans-serif",
-            writingMode: "vertical-rl",
+            writingMode: "vertical-lr",
             transform: "rotate(180deg)",
             whiteSpace: "nowrap",
             userSelect: "none",
@@ -133,10 +130,10 @@ const ContentsPage = ({ locations = [] }) => {
         aria-hidden
         style={{
           position: "absolute",
-          left: "22%",
-          top: "8%",
-          height: "38%",
-          width: 2,
+          left: "28%",
+          top: "2%",
+          height: "70%",
+          width: 3,
           background: TOC_BLUE_LIGHT,
           zIndex: 1,
         }}
@@ -146,12 +143,12 @@ const ContentsPage = ({ locations = [] }) => {
       <div
         style={{
           flex: 1,
-          padding: "56px 48px 64px 52px",
+          padding: "10px 70px",
           position: "relative",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          gap: 22,
+          gap: 25,
         }}
       >
         {items.map((item, i) => (
@@ -175,7 +172,7 @@ const ContentsPage = ({ locations = [] }) => {
             >
               <div
                 style={{
-                  fontSize: 17,
+                  fontSize: 28,
                   fontWeight: item.secondary ? 500 : 600,
                 }}
               >
@@ -184,9 +181,9 @@ const ContentsPage = ({ locations = [] }) => {
               {item.secondary && (
                 <div
                   style={{
-                    fontSize: 17,
+                    fontSize: 24,
                     fontWeight: 800,
-                    marginTop: 1,
+                    marginTop: 2,
                   }}
                 >
                   {item.secondary}

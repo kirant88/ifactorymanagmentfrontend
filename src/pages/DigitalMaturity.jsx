@@ -3,6 +3,7 @@ import DataTable from "../components/DataTable";
 import Modal from "../components/Modal";
 import { Plus, Upload as UploadIcon } from "lucide-react";
 import api from "../utils/api";
+import { notify } from "../utils/toast";
 import { useAuth } from "../context/AuthContext";
 
 const DigitalMaturity = () => {
@@ -190,7 +191,7 @@ const DigitalMaturity = () => {
       setIsTrainingModalOpen(false);
       resetTrainingForm();
     } catch (error) {
-      alert("Error adding training records.");
+      notify.error("Error adding training records.");
     }
   };
 
@@ -220,7 +221,7 @@ const DigitalMaturity = () => {
       setIsTrainingBulkOpen(false);
       setUploadFile(null);
     } catch (error) {
-      alert("Bulk upload failed.");
+      notify.error("Bulk upload failed.");
     }
   };
 
@@ -237,7 +238,7 @@ const DigitalMaturity = () => {
       link.click();
       link.remove();
     } catch (error) {
-      alert("Failed to download template.");
+      notify.error("Failed to download template.");
     }
   };
 
@@ -263,7 +264,7 @@ const DigitalMaturity = () => {
         photograph_link: "",
       });
     } catch (error) {
-      alert("Error adding assessment.");
+      notify.error("Error adding assessment.");
     }
   };
 
@@ -279,7 +280,7 @@ const DigitalMaturity = () => {
       setIsMaturityBulkOpen(false);
       setUploadFile(null);
     } catch (error) {
-      alert("Bulk upload failed.");
+      notify.error("Bulk upload failed.");
     }
   };
 
@@ -297,7 +298,7 @@ const DigitalMaturity = () => {
       link.click();
       link.remove();
     } catch (error) {
-      alert("Failed to download template.");
+      notify.error("Failed to download template.");
     }
   };
 
@@ -338,10 +339,10 @@ const DigitalMaturity = () => {
       await Promise.all(promises);
       await fetchData();
       setIsTrainingEditing(false);
-      alert("All training changes saved successfully!");
+      notify.success("All training changes saved successfully!");
     } catch (error) {
       console.error("Error saving training edits:", error);
-      alert("Failed to save changes. Please check your data.");
+      notify.error("Failed to save changes. Please check your data.");
     } finally {
       setIsLoading(false);
     }
@@ -387,10 +388,10 @@ const DigitalMaturity = () => {
       await Promise.all(promises);
       await fetchData();
       setIsAssessmentEditing(false);
-      alert("All assessment changes saved successfully!");
+      notify.success("All assessment changes saved successfully!");
     } catch (error) {
       console.error("Error saving assessment edits:", error);
-      alert("Failed to save changes. Please check your data.");
+      notify.error("Failed to save changes. Please check your data.");
     } finally {
       setIsLoading(false);
     }
@@ -493,7 +494,7 @@ const DigitalMaturity = () => {
           </div>
         </div>
         <DataTable
-          title={`iFactory Training ${isTrainingEditing ? "(Edit Mode Active)" : ""}`}
+          // title={`iFactory Training ${isTrainingEditing ? "(Edit Mode Active)" : ""}`}
           isLoading={isLoading}
           columns={[
             { header: "Sr No.", render: (_, i) => i + 1 },
@@ -646,7 +647,7 @@ const DigitalMaturity = () => {
             },
           ]}
           data={trainings}
-          onAdd={() => !isTrainingEditing && setIsTrainingModalOpen(true)}
+          // onAdd={() => !isTrainingEditing && setIsTrainingModalOpen(true)}
           pagination={{
             currentPage: trainPage,
             totalPages: Math.ceil(trainTotal / trainPageSize),
@@ -700,7 +701,7 @@ const DigitalMaturity = () => {
               className={`flex items-center gap-2 px-4 py-2 border rounded-lg font-medium transition-all ${
                 isAssessmentEditing
                   ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                  : "border-blue-600 text-blue-600 hover:bg-blue-50"
+                  : "border-green-600 text-green-600 hover:bg-green-50"
               }`}
             >
               <UploadIcon size={18} />
@@ -722,7 +723,7 @@ const DigitalMaturity = () => {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors shadow-sm ${
                 isAssessmentEditing
                   ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-green-600 text-white hover:bg-green-700"
               }`}
             >
               <Plus size={18} />
@@ -731,7 +732,7 @@ const DigitalMaturity = () => {
           </div>
         </div>
         <DataTable
-          title={`Digital Maturity Assessment ${isAssessmentEditing ? "(Edit Mode Active)" : ""}`}
+          // title={`Digital Maturity Assessment ${isAssessmentEditing ? "(Edit Mode Active)" : ""}`}
           isLoading={isLoading}
           columns={[
             { header: "Sr No.", render: (_, i) => i + 1 },
@@ -869,7 +870,7 @@ const DigitalMaturity = () => {
             },
           ]}
           data={assessments}
-          onAdd={() => !isAssessmentEditing && setIsMaturityModalOpen(true)}
+          // onAdd={() => !isAssessmentEditing && setIsMaturityModalOpen(true)}
           pagination={{
             currentPage: assessPage,
             totalPages: Math.ceil(assessTotal / assessPageSize),
@@ -1238,26 +1239,20 @@ const DigitalMaturity = () => {
         title="Training Bulk Upload"
       >
         <div className="space-y-6">
-          <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-            <p className="text-sm text-blue-700 mb-3 font-medium">
-              Please use our template for successful upload. The system accepts
-              .csv and .xlsx files.
-            </p>
+          <div className="flex justify-between items-center bg-amber-50 p-4 rounded-lg border border-amber-200">
+            <div className="text-xs text-amber-800">
+              <strong>Need a template?</strong> Download our CSV format to
+              ensure your data uploads correctly.
+            </div>
             <button
               onClick={downloadTrainingTemplate}
-              className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 uppercase tracking-wider"
+              className="text-xs bg-amber-600 text-white px-3 py-1.5 rounded-md hover:bg-amber-700 transition-colors font-bold whitespace-nowrap"
             >
-              ↓ Download Training Template
+              Download Template
             </button>
           </div>
 
-          <div
-            className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
-              uploadFile
-                ? "border-green-400 bg-green-50"
-                : "border-gray-200 hover:border-blue-400 hover:bg-blue-50/50"
-            }`}
-          >
+          <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors">
             <input
               type="file"
               className="hidden"
@@ -1266,36 +1261,34 @@ const DigitalMaturity = () => {
               onChange={(e) => setUploadFile(e.target.files[0])}
             />
             <label htmlFor="training-bulk-input" className="cursor-pointer">
-              <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${uploadFile ? "bg-green-100 text-green-600" : "bg-blue-100 text-blue-600"}`}
-              >
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 bg-amber-100 text-amber-600">
                 <UploadIcon size={24} />
               </div>
               <p className="text-sm font-bold text-gray-700 mb-1">
                 {uploadFile
                   ? uploadFile.name
-                  : "Click to select or drag and drop"}
+                  : "Click to select CSV or Excel file"}
               </p>
               <p className="text-xs text-gray-500">CSV or Excel (max 5MB)</p>
             </label>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          <div className="flex justify-end gap-3">
             <button
               onClick={() => {
                 setIsTrainingBulkOpen(false);
                 setUploadFile(null);
               }}
-              className="px-6 py-2 text-gray-500 font-bold hover:bg-gray-100 rounded-lg"
+              className="px-4 py-2 text-gray-500 font-medium"
             >
               Cancel
             </button>
             <button
               onClick={handleTrainingBulkUpload}
               disabled={!uploadFile}
-              className="px-8 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 shadow-lg shadow-green-500/30 disabled:opacity-50 disabled:shadow-none transition-all"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
             >
-              Start Upload
+              Upload & Process
             </button>
           </div>
         </div>
@@ -1308,25 +1301,20 @@ const DigitalMaturity = () => {
         title="DMA Bulk Upload"
       >
         <div className="space-y-6">
-          <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-            <p className="text-sm text-blue-700 mb-3 font-medium">
-              Please use our template for successful upload.
-            </p>
+          <div className="flex justify-between items-center bg-amber-50 p-4 rounded-lg border border-amber-200">
+            <div className="text-xs text-amber-800">
+              <strong>Need a template?</strong> Download our CSV format to
+              ensure your data uploads correctly.
+            </div>
             <button
               onClick={downloadMaturityTemplate}
-              className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 uppercase tracking-wider"
+              className="text-xs bg-amber-600 text-white px-3 py-1.5 rounded-md hover:bg-amber-700 transition-colors font-bold whitespace-nowrap"
             >
-              ↓ Download DMA Template
+              Download Template
             </button>
           </div>
 
-          <div
-            className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
-              uploadFile
-                ? "border-green-400 bg-green-50"
-                : "border-gray-200 hover:border-blue-400 hover:bg-blue-50/50"
-            }`}
-          >
+          <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors">
             <input
               type="file"
               className="hidden"
@@ -1335,36 +1323,34 @@ const DigitalMaturity = () => {
               onChange={(e) => setUploadFile(e.target.files[0])}
             />
             <label htmlFor="maturity-bulk-input" className="cursor-pointer">
-              <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${uploadFile ? "bg-green-100 text-green-600" : "bg-blue-100 text-blue-600"}`}
-              >
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 bg-amber-100 text-amber-600">
                 <UploadIcon size={24} />
               </div>
               <p className="text-sm font-bold text-gray-700 mb-1">
                 {uploadFile
                   ? uploadFile.name
-                  : "Click to select or drag and drop"}
+                  : "Click to select CSV or Excel file"}
               </p>
               <p className="text-xs text-gray-500">CSV or Excel (max 5MB)</p>
             </label>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          <div className="flex justify-end gap-3">
             <button
               onClick={() => {
                 setIsMaturityBulkOpen(false);
                 setUploadFile(null);
               }}
-              className="px-6 py-2 text-gray-500 font-bold hover:bg-gray-100 rounded-lg"
+              className="px-4 py-2 text-gray-500 font-medium"
             >
               Cancel
             </button>
             <button
               onClick={handleMaturityBulkUpload}
               disabled={!uploadFile}
-              className="px-8 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:shadow-none transition-all"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
             >
-              Start Upload
+              Upload & Process
             </button>
           </div>
         </div>
